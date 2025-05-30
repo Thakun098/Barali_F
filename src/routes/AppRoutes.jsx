@@ -12,6 +12,7 @@ import LoginPage from "../pages/main/auth/LoginPage"
 import SearchPage from "../pages/main/search/SearchPage"
 import BookingPage from "../pages/main/booking/BookingPage"
 import BookingConfirmation from "../pages/main/booking/BookingConfirmation"
+import BookingList from "../pages/main/booking/BookingList"
 
 // Admin Routes
 import DashboardPage from "../pages/admin/dashboard/DashboardPage"
@@ -25,6 +26,7 @@ const AppRoutes = () => {
         <Route path="login" element={<LoginPage />} />
         <Route path="search-results" element={<SearchPage />} />
         <Route path="booking" element={<BookingPage />} />
+        <Route path="booking-list" element={<BookingList />} />
         <Route path="booking-confirmation" element={<BookingConfirmation />} />
       </Route>
 

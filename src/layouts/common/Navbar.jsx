@@ -3,12 +3,38 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import NavDropdown from "react-bootstrap/NavDropdown";
 import Button from "react-bootstrap/Button";
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import LoginModal from "../../pages/main/auth/LoginModal";
+import { Icon } from "@iconify/react/dist/iconify.js";
 
 const MainNavbar = ({ isUser, logOut }) => {
+const [selectedAccommodation, setSelectedAccommodation] = useState([]);
+const navigate = useNavigate();
+
   console.log(isUser);
+  useEffect(() => {
+  const storedAccommodation = localStorage.getItem("selectedAccommodation");
+  if (storedAccommodation) {
+    try {
+      const parsed = JSON.parse(storedAccommodation);
+      setSelectedAccommodation(parsed);
+    } catch (error) {
+      console.error("Failed to parse stored selected accommodation:", error);
+      localStorage.removeItem("selectedAccommodation");
+    }
+  }
+}, [selectedAccommodation]);
+
+const handleCartClick = (e) =>{
+  e.preventDefault();
+  navigate("/booking-list")
+}
+
+    
+
+
+
   const [showLogin, setShowLogin] = useState(false);
   return (
     <>
@@ -48,6 +74,19 @@ const MainNavbar = ({ isUser, logOut }) => {
             </Nav>
 
             <Nav className="d-flex align-items-center gap-3">
+              <button
+                type="button"
+                className="btn btn-light position-relative"
+                onClick={handleCartClick}
+              >
+                <Icon icon="mdi-light:cart"
+              width="24"
+              height="24"
+              onClick={handleCartClick}
+              />
+              <span>{selectedAccommodation.length}</span>
+              </button>
+                
               {/* ธงภาษา */}
               <div className="d-flex align-items-center gap-1">
                 <img

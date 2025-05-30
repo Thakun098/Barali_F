@@ -196,29 +196,29 @@ const SearchPage = () => {
   }
   const userId = getUserId();
 
-  const handleBookingClick = (acc) => {
-    if (isLoggedIn) {
-      navigate("/booking", {
-        state: {
-          accommodation: acc,
-          checkIn,
-          checkOut,
-          adults,
-          children,
-        },
-      });
-    } else {
-      setSelectedAccommodation(acc);
-      setShowLoginModal(true);
-    }
-  };
+  // const handleBookingClick = (acc) => {
+  //   if (isLoggedIn) {
+  //     navigate("/booking", {
+  //       state: {
+  //         accommodation: acc,
+  //         checkIn,
+  //         checkOut,
+  //         adults,
+  //         children,
+  //       },
+  //     });
+  //   } else {
+  //     setSelectedAccommodation(acc);
+  //     setShowLoginModal(true);
+  //   }
+  // };
 
 
 
 
   // Discounted price component
   const DiscountedPrice = ({ accommodation }) => {
-    const originalPrice = accommodation.price_per_night || 0;
+    const originalPrice = parseInt(accommodation.price_per_night) || 0;
     const discountPercent = parseInt(accommodation.promotions[0]?.discount) || 0;
     const discounted = parseInt(getDiscountedPrice(accommodation));
 
@@ -250,19 +250,29 @@ const SearchPage = () => {
       <SearchBox resetFilter={resetFilters} />
 
       {selectedAccommodation.length > 0 && (
-        <Card className="p-3 mb-4 shadow-sm border-0 bg-warning bg-opacity-10">
-          <h5 className="fw-bold mb-3">รายการห้องที่คุณเลือก</h5>
+        <Card className=" mb-4 shadow-sm border-1 bg-light bg-opacity-10 w-50 mt-3 mx-auto">
+          <h5 className="fw-bold px-3 pt-4  ">รายการห้องที่คุณเลือก</h5>
           <ul className="list-group mb-3">
             {selectedAccommodation.map((room) => (
-              <li key={room.id} className="list-group-item d-flex justify-content-between align-items-center">
-                {room.name}
-                <Button variant="outline-danger" size="sm" onClick={() => handleRemoveRoom(room.id)}>
+              <li key={room.id} className="list-group-item d-flex justify-content-between align-items-center bg-info bg-opacity-10 ">
+                <div className="d-flex flex-wrap align-items-center gap-2 ">
+                  <span className="fw-semibold">{room.type?.name}</span>
+                  <span>|</span>
+                  <span className="text-success">{parseInt(getDiscountedPrice(room)).toLocaleString()} บาท</span>
+                  {room.promotions[0]?.discount > 0 && (
+                    <span className="text-danger">
+                      ลด {parseInt(room.promotions[0].discount)}%
+                    </span>
+                  )}
+                </div>
+                <Button className="ms-2" variant="outline-danger" size="sm" onClick={() => handleRemoveRoom(room.id)}>
                   ลบ
                 </Button>
               </li>
             ))}
           </ul>
           <Button
+
             variant="primary"
             disabled={!isLoggedIn}
             onClick={() => {
@@ -289,11 +299,11 @@ const SearchPage = () => {
         </Card>
       )}
 
-      <Row className="mt-4">
+      <Row className="">
         {/* Filters Sidebar */}
         <Col lg={3} className="mb-4">
           <Card
-            className="p-3 shadow-sm border-0"
+            className="my-3 p-4 shadow-sm border-0"
             style={{ background: "#EEFBFF" }}
           >
             <h5 className="fw-bold mb-3">ตัวกรอง</h5>
@@ -421,50 +431,32 @@ const SearchPage = () => {
 
                             {/* Facilities */}
                             <div className="col-md-4">
-                            {accommodations.map((acc) => {
-                              const toggleDropdown = (id) => {
-                                setExpandedFacilities((prev) => ({
-                                  ...prev,
-                                  [id]: !prev[id],
-                                }));
-                              };
-
-                              const isExpanded = expandedFacilities[acc.id];
-                              const maxVisible = 5;
-
-                              return (
-                                <div key={acc.id}>
-                                  <ul key={acc.id} className={`feature-list ${isExpanded ? "expanded" : "collapsed"}`}>
-                                    {acc.facilities.map((facility, index) => {
-                                      // แสดงเฉพาะ 5 อันแรก ถ้ายังไม่ expand
-                                      if (!isExpanded && index >= maxVisible) return null;
-
-                                      return (
-                                        <li key={facility.id}>
-                                          <Icon icon={facility.icon_name} width="24" height="24" />
-                                          {facility.name}
-                                        </li>
-                                      );
-                                    })}
-
-                                    {/* แสดงปุ่ม dropdown หากมีเกิน 5 */}
-                                    {acc.facilities.length > maxVisible && (
-                                      <li
-                                        onClick={() => toggleDropdown(acc.id)}
-                                        style={{ cursor: "pointer" }}
-                                        className="dropdown-toggle-icon"
-                                      >
-                                        <Icon
-                                          icon={isExpanded ? "mdi:chevron-up" : "mdi:chevron-down"}
-                                          width="24"
-                                          height="24"
-                                        />
-                                      </li>
-                                    )}
-                                  </ul>
-                                </div>
-                              );
-                            })}
+                              <ul className={`feature-list ${expandedFacilities[acc.id] ? "expanded" : "collapsed"}`}>
+                                {acc.facilities.slice(0, expandedFacilities[acc.id] ? acc.facilities.length : 5).map((facility, index) => (
+                                  <li key={`acc-${acc.id}-fac-${index}`}>
+                                    <Icon icon={facility.icon_name} width="24" height="24" />
+                                    {facility.name}
+                                  </li>
+                                ))}
+                                {acc.facilities.length > 5 && (
+                                  <li
+                                    onClick={() => {
+                                      setExpandedFacilities((prev) => ({
+                                        ...prev,
+                                        [acc.id]: !prev[acc.id],
+                                      }));
+                                    }}
+                                    style={{ cursor: "pointer" }}
+                                    className="dropdown-toggle-icon"
+                                  >
+                                    <Icon
+                                      icon={expandedFacilities[acc.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
+                                      width="24"
+                                      height="24"
+                                    />
+                                  </li>
+                                )}
+                              </ul>
                             </div>
 
                             {/* Prices & Booking */}

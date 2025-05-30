@@ -1,5 +1,5 @@
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -12,12 +12,16 @@ import {
 } from "react-bootstrap";
 import dayjs from "dayjs";
 import SearchBox from "../../../layouts/common/SearchBox";
-import SearchPage from "../search/SearchPage";
+import LoginModal from "../../main/auth/LoginModal";
+import AccommodationService from "../../../services/api/accommodation/accommodation.service";
+import { Icon } from "@iconify/react";
+import AuthService from "../../../services/auth/auth.service";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const BookingPage = () => {
   const { state } = useLocation();
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
@@ -31,6 +35,14 @@ const BookingPage = () => {
     adults = parseInt(searchParams.get("adults")) || 1,
     children = parseInt(searchParams.get("children")) || 0,
   } = state || {};
+
+   console.log(accommodation, checkIn, checkOut);
+
+  useEffect(() => {
+  if (!state || !state.accommodation) {
+    navigate("/", { replace: true });
+  }
+}, [state, navigate]);
 
   const [specialRequest, setSpecialRequest] = useState("");
   const [subscribeLatestOffers, setSubscribeLatestOffers] = useState(false);
@@ -69,6 +81,7 @@ const BookingPage = () => {
 
   const nights = calculateNights();
 
+  
   const calculatePrices = () => {
     if (!Array.isArray(accommodation) || accommodation.length === 0) {
       return { discountedPrice: 0, totalPrice: 0 };
@@ -93,7 +106,9 @@ const BookingPage = () => {
   };
 
   const { discountedPrice, totalPrice } = calculatePrices();
-
+const handleCloseModal = () => {
+    setShowLoginModal(false);
+  };
   const handleConfirmBooking = async () => {
     if (!checkIn || !checkOut) {
       setError("กรุณาระบุวันที่เช็คอินและเช็คเอาท์");
@@ -102,6 +117,11 @@ const BookingPage = () => {
 
     if (nights <= 0) {
       setError("วันที่เช็คเอาท์ต้องมากกว่าวันที่เช็คอิน");
+      return;
+    }
+    const isUser = AuthService.getCurrentUser();
+    if (!isUser) {
+      setShowLoginModal(true);
       return;
     }
 
@@ -131,18 +151,18 @@ const BookingPage = () => {
     }
   };
 
-  if (!accommodation) {
-    return (
-      <Container className="py-5 text-center">
-        <Alert variant="danger" className="mb-4">
-          ไม่พบข้อมูลที่พัก
-        </Alert>
-        <Button variant="primary" onClick={() => navigate("/")}>
-          กลับไปหน้าหลัก
-        </Button>
-      </Container>
-    );
-  }
+  if (!state || !state.accommodation || !Array.isArray(state.accommodation)) {
+  return (
+    <Container className="py-5 text-center">
+      <Alert variant="danger" className="mb-4">
+        ไม่พบข้อมูลการจอง กรุณาเริ่มต้นจากหน้าค้นหาอีกครั้ง
+      </Alert>
+      <Button variant="primary" onClick={() => navigate("/")}>
+        กลับไปหน้าหลัก
+      </Button>
+    </Container>
+  );
+}
 
   return (
     <div className="booking-page">
@@ -497,6 +517,15 @@ const BookingPage = () => {
           </Row>
         </div>
       </Container>
+
+      <LoginModal
+              show={showLoginModal}
+              handleClose={(handleCloseModal)}
+              onLoginSuccess={() => {
+                handleCloseModal();
+                setTimeout(() => window.location.reload(), 300); // reload หลังปิด modal
+              }}
+            />
     </div>
   );
 };

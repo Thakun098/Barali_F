@@ -1,3 +1,8 @@
 body {
   font-family: 'Kanit', sans-serif;
 }
+
+.faded-placeholder::placeholder {
+  color: rgba(0, 0, 0, 0.4); /* เปลี่ยนค่า 0.4 ให้อ่อน/เข้มตามต้องการ */
+  opacity: 1; /* ต้องกำหนดไว้เพื่อให้ทำงานในบาง browser */
+}
