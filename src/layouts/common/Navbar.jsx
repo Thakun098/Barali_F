@@ -7,33 +7,54 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import LoginModal from "../../pages/main/auth/LoginModal";
 import { Icon } from "@iconify/react/dist/iconify.js";
+import { updateAccommodation } from "../../utils/AccommodationUtils";
 
 const MainNavbar = ({ isUser, logOut }) => {
 const [selectedAccommodation, setSelectedAccommodation] = useState([]);
 const navigate = useNavigate();
 
   console.log(isUser);
-  useEffect(() => {
-  const storedAccommodation = localStorage.getItem("selectedAccommodation");
-  if (storedAccommodation) {
-    try {
-      const parsed = JSON.parse(storedAccommodation);
-      setSelectedAccommodation(parsed);
-    } catch (error) {
-      console.error("Failed to parse stored selected accommodation:", error);
-      localStorage.removeItem("selectedAccommodation");
+  
+useEffect(() => {
+  const loadAccommodation = () => {
+    const stored = localStorage.getItem("selectedAccommodation");
+    if (stored) {
+      try {
+        setSelectedAccommodation(JSON.parse(stored));
+      } catch (error) {
+        console.error("Failed to parse selected accommodation:", error);
+        setSelectedAccommodation([]);
+      }
+    } else {
+      setSelectedAccommodation([]);
     }
-  }
-}, [selectedAccommodation]);
+  };
 
-const handleCartClick = (e) =>{
+  // โหลดครั้งแรก
+  loadAccommodation();
+
+  // ฟัง custom event
+  const handleAccommodationChanged = () => {
+    loadAccommodation();
+  };
+
+  window.addEventListener("accommodationChanged", handleAccommodationChanged);
+
+  return () => {
+    window.removeEventListener("accommodationChanged", handleAccommodationChanged);
+  };
+}, []);
+
+
+
+const handleCartClick = async (e) =>{
   e.preventDefault();
-  navigate("/booking-list")
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // เสร็จแล้ว navigate
+  navigate("/booking-list");
+
 }
-
-    
-
-
 
   const [showLogin, setShowLogin] = useState(false);
   return (

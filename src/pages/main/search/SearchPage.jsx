@@ -177,6 +177,7 @@ const SearchPage = () => {
       const newSelection = [...selectedAccommodation, acc];
       setSelectedAccommodation(newSelection);
       localStorage.setItem("selectedAccommodation", JSON.stringify(newSelection));
+      window.dispatchEvent(new Event("accommodationChanged"));
     }
   };
 
@@ -184,6 +185,7 @@ const SearchPage = () => {
     const newSelection = selectedAccommodation.filter((room) => room.id !== roomId);
     setSelectedAccommodation(newSelection);
     localStorage.setItem("selectedAccommodation", JSON.stringify(newSelection));
+    window.dispatchEvent(new Event("accommodationChanged"));
   };
 
   const getUserId = () => {
