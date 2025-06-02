@@ -31,3 +31,13 @@ body {
   font-weight: bold;
   color: #007bff;
 }
+
+.feature-listS li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #495057;
+  border-radius: 8px;
+  padding: 6px 12px;
+}
