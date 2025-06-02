@@ -27,7 +27,7 @@ const AppRoutes = () => {
         <Route path="search-results" element={<SearchPage />} />
         <Route path="booking" element={<BookingPage />} />
         <Route path="booking-list" element={<BookingList />} />
-        <Route path="booking-confirmation/:paymentId" element={<BookingConfirmation />} />
+        <Route path="booking-confirmation" element={<BookingConfirmation />} />
       </Route>
 
       {/* Admin Protected Routes */}

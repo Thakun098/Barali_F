@@ -259,7 +259,7 @@ const SearchPage = () => {
         {/* Filters Sidebar */}
         <Col lg={3} className="mb-4">
           <Card
-            className="my-3 p-4 shadow-sm border-0"
+            className="my-3 p-4 shadow-sm border-0 "
             style={{ background: "#EEFBFF" }}
           >
             <h5 className="fw-bold mb-3">ตัวกรอง</h5>
@@ -387,7 +387,7 @@ const SearchPage = () => {
 
                             {/* Facilities */}
                             <div className="col-md-4">
-                              <ul className={`feature-list ${expandedFacilities[acc.id] ? "expanded" : "collapsed"}`}>
+                              <ul className={`feature-listS ${expandedFacilities[acc.id] ? "expanded" : "collapsed"}`}>
                                 {acc.facilities.slice(0, expandedFacilities[acc.id] ? acc.facilities.length : 5).map((facility, index) => (
                                   <li key={`acc-${acc.id}-fac-${index}`}>
                                     <Icon icon={facility.icon_name} width="24" height="24" />
