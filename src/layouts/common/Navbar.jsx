@@ -7,54 +7,55 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import LoginModal from "../../pages/main/auth/LoginModal";
 import { Icon } from "@iconify/react/dist/iconify.js";
-import { updateAccommodation } from "../../utils/AccommodationUtils";
+// import { updateAccommodation } from "../../utils/AccommodationUtils";
 
 const MainNavbar = ({ isUser, logOut }) => {
-const [selectedAccommodation, setSelectedAccommodation] = useState([]);
-const navigate = useNavigate();
+  const [selectedAccommodation, setSelectedAccommodation] = useState([]);
+  const navigate = useNavigate();
+  const paymentId = null;
 
   console.log(isUser);
-  
-useEffect(() => {
-  const loadAccommodation = () => {
-    const stored = localStorage.getItem("selectedAccommodation");
-    if (stored) {
-      try {
-        setSelectedAccommodation(JSON.parse(stored));
-      } catch (error) {
-        console.error("Failed to parse selected accommodation:", error);
+
+  useEffect(() => {
+    const loadAccommodation = () => {
+      const stored = localStorage.getItem("selectedAccommodation");
+      if (stored) {
+        try {
+          setSelectedAccommodation(JSON.parse(stored));
+        } catch (error) {
+          console.error("Failed to parse selected accommodation:", error);
+          setSelectedAccommodation([]);
+        }
+      } else {
         setSelectedAccommodation([]);
       }
-    } else {
-      setSelectedAccommodation([]);
-    }
-  };
+    };
 
-  // โหลดครั้งแรก
-  loadAccommodation();
-
-  // ฟัง custom event
-  const handleAccommodationChanged = () => {
+    // โหลดครั้งแรก
     loadAccommodation();
-  };
 
-  window.addEventListener("accommodationChanged", handleAccommodationChanged);
+    // ฟัง custom event
+    const handleAccommodationChanged = () => {
+      loadAccommodation();
+    };
 
-  return () => {
-    window.removeEventListener("accommodationChanged", handleAccommodationChanged);
-  };
-}, []);
+    window.addEventListener("accommodationChanged", handleAccommodationChanged);
+
+    return () => {
+      window.removeEventListener("accommodationChanged", handleAccommodationChanged);
+    };
+  }, []);
 
 
 
-const handleCartClick = async (e) =>{
-  e.preventDefault();
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  const handleCartClick = async (e) => {
+    e.preventDefault();
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
-  // เสร็จแล้ว navigate
-  navigate("/booking-list");
+    // เสร็จแล้ว navigate
+    navigate("/booking-list");
 
-}
+  }
 
   const [showLogin, setShowLogin] = useState(false);
   return (
@@ -64,6 +65,7 @@ const handleCartClick = async (e) =>{
         bg="light"
         variant="light"
         className="shadow-sm border-bottom"
+        sticky="top"
       >
         <Container>
           <Navbar.Brand as={Link} to="/">
@@ -100,14 +102,31 @@ const handleCartClick = async (e) =>{
                 className="btn btn-light position-relative"
                 onClick={handleCartClick}
               >
-                <Icon icon="mdi-light:cart"
-              width="24"
-              height="24"
-              onClick={handleCartClick}
-              />
-              <span>{selectedAccommodation.length}</span>
+                <Icon icon="mdi-light:cart" width="24" height="24" />
+
+                {selectedAccommodation.length > 0 && (
+                  <span
+                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    style={{ fontSize: "0.6rem", minWidth: "1.2rem" }}
+                  >
+                    {selectedAccommodation.length}
+                    <span className="visually-hidden">รายการในรถเข็น</span>
+                  </span>
+                )}
               </button>
-                
+
+              {/* {isUser && (
+                <Button
+                  type="button"
+                  variant="light"
+                  className="position-relative"
+                  onClick={() => navigate(`/booking-confirmation/${paymentId}`)}
+                >
+                  <Icon icon="mdi:receipt-text-outline" width="24" height="24" />
+                  <span className="ms-2">การชำระเงิน</span>
+                </Button>
+              )} */}
+
               {/* ธงภาษา */}
               <div className="d-flex align-items-center gap-1">
                 <img

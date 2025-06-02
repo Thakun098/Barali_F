@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import SearchBox from "../../../layouts/common/SearchBox";
 import LoginModal from "../../main/auth/LoginModal";
 import AccommodationService from "../../../services/api/accommodation/accommodation.service";
+import BookingService from "../../../services/api/booking/booking.service";
 import { Icon } from "@iconify/react";
 import AuthService from "../../../services/auth/auth.service";
 
@@ -24,6 +25,8 @@ const BookingPage = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [expandedFacilities, setExpandedFacilities] = useState({});
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,7 +94,7 @@ const BookingPage = () => {
 
     accommodation.forEach((room) => {
       const basePrice = room.price_per_night;
-      const discount = room.promotions?.discount || 0;
+      const discount = room.promotions[0]?.discount || 0;
       const discounted = discount > 0
         ? Math.round(basePrice * (1 - discount / 100))
         : basePrice;
@@ -127,9 +130,9 @@ const handleCloseModal = () => {
 
     setIsSubmitting(true);
     setError(null);
+    setLoading(true);
 
-    try {
-      const bookingData = {
+    const bookingData = {
         userId,
         roomIds: accommodation.map((room) => room.id),
         checkIn,
@@ -140,9 +143,28 @@ const handleCloseModal = () => {
         // subscribeLatestOffers,
         totalPrice,
       };
+      console.log("ยืนยันการจอง:", bookingData);
+
+    try {
+      
+      bookingData ? await BookingService.MakeBooking(
+        userId,
+        accommodation.map((room) => room.id),
+        checkIn,
+        checkOut,
+        adults,
+        children,
+        specialRequest,
+        totalPrice
+      )
+      : setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
+      setLoading(false);
 
       console.log("ยืนยันการจอง:", bookingData);
+      localStorage.removeItem("selectedAccommodation");
       navigate("/booking-confirmation", { state: bookingData });
+      
+
     } catch (err) {
       console.error("การจองล้มเหลว:", err);
       setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
@@ -367,47 +389,48 @@ const handleCloseModal = () => {
                       : "https://via.placeholder.com/600x400?text=No+Image"}
                   />
                   <Card.Body>
-                    <Card.Title>{room.name}</Card.Title>
+                    <Card.Title>{room.type?.name}</Card.Title>
+                    <ul className={`feature-list ${expandedFacilities[room.id] ? "expanded" : "collapsed"}`}>
+                                {room.facilities.slice(0, expandedFacilities[room.id] ? room.facilities.length : 5).map((facility, index) => (
+                                  <li key={`acc-${room.id}-fac-${index}`}>
+                                    <Icon icon={facility.icon_name} width="24" height="24" />
+                                    {facility.name}
+                                  </li>
+                                ))}
+                                {room.facilities.length > 5 && (
+                                  <li
+                                    onClick={() => {
+                                      setExpandedFacilities((prev) => ({
+                                        ...prev,
+                                        [room.id]: !prev[room.id],
+                                      }));
+                                    }}
+                                    style={{ cursor: "pointer" }}
+                                    className="dropdown-toggle-icon"
+                                  >
+                                    <Icon
+                                      icon={expandedFacilities[room.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
+                                      width="24"
+                                      height="24"
+                                    />
+                                  </li>
+                                )}
+                              </ul>
                     <Card.Text>
-                      ราคาต่อคืน: {room.price_per_night.toLocaleString()} บาท
-                      {room.discount > 0 && (
+                      ราคาต่อคืน: {parseInt(room.price_per_night).toLocaleString()} บาท
+                      {room.promotions[0]?.discount > 0 && (
                         <>
                           <br />
-                          ส่วนลด: {room.discount}% → ราคา:{" "}
-                          {Math.round(room.price_per_night * (1 - room.discount / 100)).toLocaleString()} บาท
+                          ส่วนลด: {parseInt(room.promotions[0]?.discount)}% → ราคา:{" "}
+                          {Math.round(room.price_per_night * (1 - room.promotions[0]?.discount / 100)).toLocaleString()} บาท
                         </>
+                        
                       )}
                     </Card.Text>
+                    
                   </Card.Body>
                 </Card>
               ))}
-
-              {/* <Card className="special-request-card">
-                <Card.Body>
-                  <h3 className="section-title">สิ่งอำนวยความสะดวก</h3>
-                  <div className="amenities-grid">
-                    {[
-                      { icon: "bi-wifi", label: "ฟรีอินเทอร์เน็ตไร้สาย (Wi-Fi)" },
-                      { icon: "bi-p-circle", label: "ที่จอดรถ" },
-                      { icon: "bi-droplet", label: "เครื่องทำน้ำอุ่น" },
-                      { icon: "bi-tv", label: "เคเบิ้ลทีวี" },
-                      { icon: "bi-snow", label: "เครื่องปรับอากาศ" },
-                      { icon: "bi-cup-hot", label: "กาแฟ" },
-                      { icon: "bi-droplet-fill", label: "น้ำดื่มฟรีทุกวัน 2 ขวด" },
-                      { icon: "bi-bathtub", label: "ฝักบัวและอ่างอาบน้ำ" },
-                      { icon: "bi-umbrella", label: "ร่ม" },
-                      { icon: "bi-slack", label: "รองเท้าแตะ" },
-                      { icon: "bi-tree", label: "วิว: สวน" },
-                      { icon: "bi-building", label: "จำนวนห้องพัก: 24 วิลล่า" },
-                    ].map((item, index) => (
-                      <div className="amenity-item" key={index}>
-                        <i className={`bi ${item.icon} amenity-icon`}></i>
-                        <span>{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </Card.Body>
-              </Card> */}
 
               <Card className="special-request-card">
                 <Card.Body>

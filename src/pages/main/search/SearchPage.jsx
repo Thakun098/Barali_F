@@ -82,7 +82,7 @@ const SearchPage = () => {
           : await AccommodationService.getAll();
 
         setOriginalResults(res?.data || []);
-        console.log(res.data);
+        
       } catch (error) {
         console.error("Error fetching search results:", error);
         setError("เกิดข้อผิดพลาดในการโหลดข้อมูลที่พัก");
@@ -161,6 +161,15 @@ const SearchPage = () => {
   };
 
   useEffect(() => {
+  localStorage.setItem("bookingInfo", JSON.stringify({
+    checkIn,
+    checkOut,
+    adults,
+    children,
+  }));
+}, [checkIn, checkOut, adults, children]);
+
+  useEffect(() => {
     const storedAccommodation = localStorage.getItem("selectedAccommodation");
     if (storedAccommodation) {
       try {
@@ -181,12 +190,7 @@ const SearchPage = () => {
     }
   };
 
-  const handleRemoveRoom = (roomId) => {
-    const newSelection = selectedAccommodation.filter((room) => room.id !== roomId);
-    setSelectedAccommodation(newSelection);
-    localStorage.setItem("selectedAccommodation", JSON.stringify(newSelection));
-    window.dispatchEvent(new Event("accommodationChanged"));
-  };
+
 
   const getUserId = () => {
     const user = localStorage.getItem("user");
@@ -250,56 +254,6 @@ const SearchPage = () => {
   return (
     <Container className="my-4">
       <SearchBox resetFilter={resetFilters} />
-
-      {selectedAccommodation.length > 0 && (
-        <Card className=" mb-4 shadow-sm border-1 bg-light bg-opacity-10 w-50 mt-3 mx-auto">
-          <h5 className="fw-bold px-3 pt-4  ">รายการห้องที่คุณเลือก</h5>
-          <ul className="list-group mb-3">
-            {selectedAccommodation.map((room) => (
-              <li key={room.id} className="list-group-item d-flex justify-content-between align-items-center bg-info bg-opacity-10 ">
-                <div className="d-flex flex-wrap align-items-center gap-2 ">
-                  <span className="fw-semibold">{room.type?.name}</span>
-                  <span>|</span>
-                  <span className="text-success">{parseInt(getDiscountedPrice(room)).toLocaleString()} บาท</span>
-                  {room.promotions[0]?.discount > 0 && (
-                    <span className="text-danger">
-                      ลด {parseInt(room.promotions[0].discount)}%
-                    </span>
-                  )}
-                </div>
-                <Button className="ms-2" variant="outline-danger" size="sm" onClick={() => handleRemoveRoom(room.id)}>
-                  ลบ
-                </Button>
-              </li>
-            ))}
-          </ul>
-          <Button
-
-            variant="primary"
-            disabled={!isLoggedIn}
-            onClick={() => {
-              navigate("/booking", {
-                state: {
-                  userId,
-                  accommodation: selectedAccommodation,
-                  checkIn,
-                  checkOut,
-                  adults,
-                  children,
-                },
-              })
-              localStorage.removeItem("selectedAccommodation");
-            }
-
-            }
-          >
-            ยืนยันการจองทั้งหมด ({selectedAccommodation.length} ห้อง)
-          </Button>
-          {!isLoggedIn && (
-            <div className="text-danger mt-2">กรุณาเข้าสู่ระบบก่อนทำการจอง</div>
-          )}
-        </Card>
-      )}
 
       <Row className="">
         {/* Filters Sidebar */}

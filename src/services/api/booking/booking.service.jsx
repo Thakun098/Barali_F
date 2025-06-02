@@ -16,3 +16,9 @@ const MakeBooking = async ( userId, roomIds, checkInDate, checkOutDate, adults, 
         }
     );
 }
+
+const BookingService = {
+    MakeBooking,
+};
+
+export default BookingService;
