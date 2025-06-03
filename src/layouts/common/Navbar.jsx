@@ -150,6 +150,9 @@ const MainNavbar = ({ isUser, logOut }) => {
                     className="rounded-circle"
                     size="sm"
                     onClick={logOut}
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="ออกจากระบบ"
                     style={{
                       backgroundColor: "#18abdb",
                       borderColor: "#18abdb",
@@ -168,7 +171,7 @@ const MainNavbar = ({ isUser, logOut }) => {
                         "#18abdb"; /* กลับเป็นสีขอบเดิม */
                     }}
                   >
-                    <i className="bi bi-person"></i>
+                    <i className="bi bi-person rounded"></i>
                   </Button>
                   </div>
                   <Navbar.Text className="text-dark fw-medium bg-secondary bg-opacity-25 px-2 py-1 rounded">
