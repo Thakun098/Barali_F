@@ -14,17 +14,22 @@ const BookingConfirmation = () => {
 
   const [paymentData, setPaymentData] = useState(state || null);
   const [user, setUser] = useState(null);
+
   const [loading, setLoading] = useState(!!paymentId);
   const [error, setError] = useState(null);
-  const [manualId, setManualId] = useState(''); // 🆕 ใช้สำหรับ input id เอง
-  const [fetching, setFetching] = useState(false); // เพื่อควบคุม spinner เวลา fetch
+  const [inputPaymentId, setInputPaymentId] = useState('');
+  const [isFetchingById, setIsFetchingById] = useState(false);
 
+  // โหลด user จาก localStorage แค่ครั้งเดียว
   useEffect(() => {
     const userData = localStorage.getItem('user');
     if (userData) {
       setUser(JSON.parse(userData));
     }
+  }, []);
 
+  // โหลด payment data หากมี paymentId หรือ state
+  useEffect(() => {
     if (paymentId) {
       fetchPayment(paymentId);
     } else if (state) {
@@ -37,29 +42,29 @@ const BookingConfirmation = () => {
     try {
       const res = await axios.get(`${BASE_URL}/api/payment/${id}`);
       setPaymentData(res.data);
-      console.log(res.data);
       setError(null);
     } catch (err) {
-      console.error("Error fetching payment:", err);
-      setError("ไม่พบข้อมูลการชำระเงินสำหรับ ID นี้");
+      console.error('Error fetching payment:', err);
       setPaymentData(null);
+      setError('ไม่พบข้อมูลการชำระเงินสำหรับ ID นี้');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmitId = (e) => {
+  const handleManualSearch = async (e) => {
     e.preventDefault();
-    if (manualId.trim()) {
-      setFetching(true);
-      fetchPayment(manualId).finally(() => setFetching(false));
-    }
+    if (!inputPaymentId.trim()) return;
+
+    setIsFetchingById(true);
+    await fetchPayment(inputPaymentId);
+    setIsFetchingById(false);
   };
 
-  if (loading || fetching) {
+  if (loading || isFetchingById) {
     return (
       <Container className="text-center my-5">
-        <Spinner animation="border" role="status" />
+        <Spinner animation="border" />
         <p className="mt-3">กำลังโหลดข้อมูล...</p>
       </Container>
     );
@@ -69,24 +74,20 @@ const BookingConfirmation = () => {
     return (
       <Container className="my-5" style={{ maxWidth: 500 }}>
         <h5 className="mb-4 text-center">กรอกรหัสการชำระเงิน</h5>
-        {error && <Alert variant="danger">{error}</Alert>}
-        <Form onSubmit={handleSubmitId}>
+        {error && <Alert variant="danger" dismissible>{error}</Alert>}
+        <Form onSubmit={handleManualSearch}>
           <Form.Group controlId="paymentId">
             <Form.Label>Payment ID</Form.Label>
             <Form.Control
               type="text"
               placeholder="เช่น 123456"
-              value={manualId}
-              onChange={(e) => setManualId(e.target.value)}
+              value={inputPaymentId}
+              onChange={(e) => setInputPaymentId(e.target.value)}
             />
           </Form.Group>
           <div className="mt-3 d-flex justify-content-between">
-            <Button variant="secondary" onClick={() => navigate('/')}>
-              กลับหน้าหลัก
-            </Button>
-            <Button variant="primary" type="submit" disabled={fetching}>
-              ค้นหา
-            </Button>
+            <Button variant="secondary" onClick={() => navigate('/')}>กลับหน้าหลัก</Button>
+            <Button variant="primary" type="submit" disabled={isFetchingById}>ค้นหา</Button>
           </div>
         </Form>
       </Container>
@@ -100,9 +101,23 @@ const BookingConfirmation = () => {
     adults,
     children,
     totalPrice,
-    // specialRequest,
+    dueDate
   } = paymentData;
-  console.log(paymentData);
+
+  const handleMockPayment = async () => {
+  try {
+    const res = await axios.post(`${BASE_URL}/api/payment/confirm/${paymentData._id}`);
+    console.log('Payment confirmed:', res.data);
+    alert('อัปเดตสถานะเป็น "ชำระเงินแล้ว" สำเร็จ');
+    setPaymentData({ ...paymentData, status: 'paid' }); // จำลองการอัปเดตสถานะ
+  } catch (err) {
+    console.error(err);
+    alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+  }
+};
+
+  const formatDate = (dateStr) =>
+    dateStr ? dayjs(dateStr).locale('th').format('DD MMMM YYYY') : '-';
 
   return (
     <Container className="my-5 p-4 border rounded shadow-sm bg-white" style={{ maxWidth: 700 }}>
@@ -134,47 +149,70 @@ const BookingConfirmation = () => {
         <tbody>
           <tr>
             <td>วันที่เช็คอิน</td>
-            <td>{dayjs(checkIn).locale('th').format('DD MMMM YYYY')}</td>
+            <td>{formatDate(checkIn)}</td>
           </tr>
           <tr>
             <td>วันที่เช็คเอาท์</td>
-            <td>{dayjs(checkOut).locale('th').format('DD MMMM YYYY')}</td>
+            <td>{formatDate(checkOut)}</td>
           </tr>
           <tr>
             <td>จำนวนห้อง</td>
-            <td>{roomIds?.length || '-'}</td>
+            <td>{Array.isArray(roomIds) ? roomIds.length : '-'}</td>
           </tr>
           <tr>
             <td>ผู้ใหญ่</td>
-            <td>{adults}</td>
+            <td>{adults ?? '-'}</td>
           </tr>
           <tr>
             <td>เด็ก</td>
-            <td>{children}</td>
+            <td>{children ?? '-'}</td>
           </tr>
         </tbody>
       </Table>
 
       <Row className="mt-4 mb-3">
-  <Col><strong>ราคาทั้งหมด</strong></Col>
-</Row>
-<Table bordered>
-  <tbody>
-    <tr>
-      <td>ยอดรวม</td>
-      <td>{parseInt(totalPrice)?.toLocaleString() || '-'} บาท</td>
-    </tr>
-    <tr>
-      <td>ครบกำหนดชำระ</td>
-      <td>{paymentData?.dueDate ? dayjs(paymentData.dueDate).locale('th').format('DD MMMM YYYY') : '-'}</td>
-    </tr>
-  </tbody>
-</Table>
+        <Col><strong>ราคาทั้งหมด</strong></Col>
+      </Row>
+      <Table bordered>
+        <tbody>
+          <tr>
+            <td>ยอดรวม</td>
+            <td>{!isNaN(parseInt(totalPrice)) ? parseInt(totalPrice).toLocaleString() : '-'} บาท</td>
+          </tr>
+          <tr>
+            <td>ครบกำหนดชำระ</td>
+            <td>{formatDate(dueDate)}</td>
+          </tr>
+        </tbody>
+      </Table>
 
-      <div className="d-flex justify-content-between mt-4">
-        <Button variant="secondary" onClick={() => navigate(-1)}>ย้อนกลับ</Button>
-        <Button variant="primary">ชำระเงิน</Button>
+      {paymentData?.status !== 'paid' ? (
+  <>
+    <Row className="mt-4 mb-3">
+      <Col><strong>QR Code สำหรับชำระเงิน (จำลอง)</strong></Col>
+    </Row>
+    <div className="text-center mb-3">
+      <img
+        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.youtube.com/watch?v=8WCmS9fIlZo`}
+        alt="QR Code"
+        style={{ border: '1px solid #ccc', padding: 10, background: '#fff' }}
+      />
+      <div className="text-muted mt-2" style={{ fontSize: '0.9em' }}>
+        สแกนเพื่อชำระเงิน (ปลอม ๆ 😆)
       </div>
+    </div>
+
+    <div className="text-center">
+      <Button variant="success" onClick={handleMockPayment}>
+        ฉันได้ชำระเงินแล้ว (จำลอง)
+      </Button>
+    </div>
+  </>
+) : (
+  <Alert variant="success" className="mt-4 text-center">
+    ✅ ชำระเงินเรียบร้อยแล้ว
+  </Alert>
+)}
     </Container>
   );
 };

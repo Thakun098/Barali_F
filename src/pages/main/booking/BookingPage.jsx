@@ -14,9 +14,9 @@ import dayjs from "dayjs";
 import SearchBox from "../../../layouts/common/SearchBox";
 import LoginModal from "../../main/auth/LoginModal";
 import AccommodationService from "../../../services/api/accommodation/accommodation.service";
+import AuthService from "../../../services/auth/auth.service";
 import BookingService from "../../../services/api/booking/booking.service";
 import { Icon } from "@iconify/react";
-import AuthService from "../../../services/auth/auth.service";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -31,7 +31,8 @@ const BookingPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
-    userId = "",
+    currentUser = AuthService.getCurrentUser(),
+    userId = currentUser?.id,
     accommodation = [],
     checkIn = searchParams.get("checkIn") || "",
     checkOut = searchParams.get("checkOut") || "",
@@ -39,13 +40,13 @@ const BookingPage = () => {
     children = parseInt(searchParams.get("children")) || 0,
   } = state || {};
 
-   console.log(accommodation, checkIn, checkOut);
+  console.log(accommodation, checkIn, checkOut);
 
   useEffect(() => {
-  if (!state || !state.accommodation) {
-    navigate("/", { replace: true });
-  }
-}, [state, navigate]);
+    if (!state || !state.accommodation) {
+      navigate("/", { replace: true });
+    }
+  }, [state, navigate]);
 
   const [specialRequest, setSpecialRequest] = useState("");
   const [subscribeLatestOffers, setSubscribeLatestOffers] = useState(false);
@@ -84,7 +85,7 @@ const BookingPage = () => {
 
   const nights = calculateNights();
 
-  
+
   const calculatePrices = () => {
     if (!Array.isArray(accommodation) || accommodation.length === 0) {
       return { discountedPrice: 0, totalPrice: 0 };
@@ -109,7 +110,7 @@ const BookingPage = () => {
   };
 
   const { discountedPrice, totalPrice } = calculatePrices();
-const handleCloseModal = () => {
+  const handleCloseModal = () => {
     setShowLoginModal(false);
   };
   const handleConfirmBooking = async () => {
@@ -133,20 +134,20 @@ const handleCloseModal = () => {
     setLoading(true);
 
     const bookingData = {
-        userId,
-        roomIds: accommodation.map((room) => room.id),
-        checkIn,
-        checkOut,
-        adults,
-        children,
-        specialRequest,
-        // subscribeLatestOffers,
-        totalPrice,
-      };
-      console.log("ยืนยันการจอง:", bookingData);
+      userId,
+      roomIds: accommodation.map((room) => room.id),
+      checkIn,
+      checkOut,
+      adults,
+      children,
+      specialRequest,
+      // subscribeLatestOffers,
+      totalPrice,
+    };
+    console.log("ยืนยันการจอง:", bookingData);
 
     try {
-      
+
       bookingData ? await BookingService.MakeBooking(
         userId,
         accommodation.map((room) => room.id),
@@ -157,13 +158,13 @@ const handleCloseModal = () => {
         specialRequest,
         totalPrice
       )
-      : setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
+        : setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
       setLoading(false);
 
       console.log("ยืนยันการจอง:", bookingData);
       localStorage.removeItem("selectedAccommodation");
       navigate("/booking-confirmation", { state: bookingData });
-      
+
 
     } catch (err) {
       console.error("การจองล้มเหลว:", err);
@@ -174,21 +175,21 @@ const handleCloseModal = () => {
   };
 
   if (!state || !state.accommodation || !Array.isArray(state.accommodation)) {
-  return (
-    <Container className="py-5 text-center">
-      <Alert variant="danger" className="mb-4">
-        ไม่พบข้อมูลการจอง กรุณาเริ่มต้นจากหน้าค้นหาอีกครั้ง
-      </Alert>
-      <Button variant="primary" onClick={() => navigate("/")}>
-        กลับไปหน้าหลัก
-      </Button>
-    </Container>
-  );
-}
+    return (
+      <Container className="py-5 text-center">
+        <Alert variant="danger" className="mb-4">
+          ไม่พบข้อมูลการจอง กรุณาเริ่มต้นจากหน้าค้นหาอีกครั้ง
+        </Alert>
+        <Button variant="primary" onClick={() => navigate("/")}>
+          กลับไปหน้าหลัก
+        </Button>
+      </Container>
+    );
+  }
 
   return (
     <div className="booking-page">
-      <style jsx ="true">{`
+      <style jsx="true">{`
         .booking-page {
           background-color: #f8f9fa;
           min-height: 100vh;
@@ -391,31 +392,31 @@ const handleCloseModal = () => {
                   <Card.Body>
                     <Card.Title>{room.type?.name}</Card.Title>
                     <ul className={`feature-list ${expandedFacilities[room.id] ? "expanded" : "collapsed"}`}>
-                                {room.facilities.slice(0, expandedFacilities[room.id] ? room.facilities.length : 5).map((facility, index) => (
-                                  <li key={`acc-${room.id}-fac-${index}`}>
-                                    <Icon icon={facility.icon_name} width="24" height="24" />
-                                    {facility.name}
-                                  </li>
-                                ))}
-                                {room.facilities.length > 5 && (
-                                  <li
-                                    onClick={() => {
-                                      setExpandedFacilities((prev) => ({
-                                        ...prev,
-                                        [room.id]: !prev[room.id],
-                                      }));
-                                    }}
-                                    style={{ cursor: "pointer" }}
-                                    className="dropdown-toggle-icon"
-                                  >
-                                    <Icon
-                                      icon={expandedFacilities[room.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
-                                      width="24"
-                                      height="24"
-                                    />
-                                  </li>
-                                )}
-                              </ul>
+                      {room.facilities.slice(0, expandedFacilities[room.id] ? room.facilities.length : 5).map((facility, index) => (
+                        <li key={`acc-${room.id}-fac-${index}`}>
+                          <Icon icon={facility.icon_name} width="24" height="24" />
+                          {facility.name}
+                        </li>
+                      ))}
+                      {room.facilities.length > 5 && (
+                        <li
+                          onClick={() => {
+                            setExpandedFacilities((prev) => ({
+                              ...prev,
+                              [room.id]: !prev[room.id],
+                            }));
+                          }}
+                          style={{ cursor: "pointer" }}
+                          className="dropdown-toggle-icon"
+                        >
+                          <Icon
+                            icon={expandedFacilities[room.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
+                            width="24"
+                            height="24"
+                          />
+                        </li>
+                      )}
+                    </ul>
                     <Card.Text>
                       ราคาต่อคืน: {parseInt(room.price_per_night).toLocaleString()} บาท
                       {room.promotions[0]?.discount > 0 && (
@@ -424,10 +425,10 @@ const handleCloseModal = () => {
                           ส่วนลด: {parseInt(room.promotions[0]?.discount)}% → ราคา:{" "}
                           {Math.round(room.price_per_night * (1 - room.promotions[0]?.discount / 100)).toLocaleString()} บาท
                         </>
-                        
+
                       )}
                     </Card.Text>
-                    
+
                   </Card.Body>
                 </Card>
               ))}
@@ -475,29 +476,43 @@ const handleCloseModal = () => {
                 <Card.Body style={{ padding: '25px' }}>
                   <h3 className="section-title" style={{ marginBottom: '20px' }}>สรุปการจอง</h3>
 
-                  <div className="price-row">
-                    <span>ราคาที่พัก (ต่อห้อง / ต่อคืน)</span>
-                    <span className="price-original">
-                      {accommodation.price_per_night?.toLocaleString() || "0"} บาท
-                    </span>
-                  </div>
+                  {accommodation.map((room, index) => {
+                    const pricePerNight = parseFloat(room.price_per_night);
+                    const discount = parseFloat(room.promotions[0]?.discount || 0);
+                    const discountedPrice = pricePerNight * (1 - discount / 100);
 
-                  {accommodation.discount > 0 && (
-                    <div style={{ textAlign: 'right', marginBottom: '10px' }}>
-                      <span className="discount-badge">
-                        ส่วนลด {accommodation.discount}%
-                      </span>
-                    </div>
-                  )}
+                    return (
+                      <div key={room.id} style={{ marginBottom: '20px' }}>
+                        <div className="price-row">
+                          <span>ห้อง {index + 1}: {room.description}</span>
+                        </div>
 
-                  <hr style={{ margin: '15px 0' }} />
+                        <div className="price-row">
+                          <span>ราคาที่พัก (ต่อห้อง / ต่อคืน)</span>
+                          <span className="price-original">
+                            {pricePerNight.toLocaleString()} บาท
+                          </span>
+                        </div>
 
-                  <div className="price-row">
-                    <span>ราคาหลังหักส่วนลด</span>
-                    <span style={{ fontWeight: '600' }}>
-                      {discountedPrice.toLocaleString()} บาท/คืน
-                    </span>
-                  </div>
+                        {discount > 0 && (
+                          <div style={{ textAlign: 'right', marginBottom: '10px' }}>
+                            <span className="discount-badge">
+                              ส่วนลด {parseInt(discount)}%
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="price-row">
+                          <span>ราคาหลังหักส่วนลด</span>
+                          <span style={{ fontWeight: '600' }}>
+                            {discountedPrice.toLocaleString()} บาท/คืน
+                          </span>
+                        </div>
+
+                        <hr style={{ margin: '15px 0' }} />
+                      </div>
+                    );
+                  })}
 
                   <div className="price-row">
                     <span>จำนวนคืน</span>
@@ -542,13 +557,13 @@ const handleCloseModal = () => {
       </Container>
 
       <LoginModal
-              show={showLoginModal}
-              handleClose={(handleCloseModal)}
-              onLoginSuccess={() => {
-                handleCloseModal();
-                setTimeout(() => window.location.reload(), 300); // reload หลังปิด modal
-              }}
-            />
+        show={showLoginModal}
+        handleClose={(handleCloseModal)}
+        onLoginSuccess={() => {
+          handleCloseModal();
+          setTimeout(() => window.location.reload(), 300); // reload หลังปิด modal
+        }}
+      />
     </div>
   );
 };
