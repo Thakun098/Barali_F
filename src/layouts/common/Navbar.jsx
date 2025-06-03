@@ -12,7 +12,7 @@ import { Icon } from "@iconify/react/dist/iconify.js";
 const MainNavbar = ({ isUser, logOut }) => {
   const [selectedAccommodation, setSelectedAccommodation] = useState([]);
   const navigate = useNavigate();
-  const paymentId = null;
+  // const paymentId = null;
 
   console.log(isUser);
 
@@ -115,17 +115,17 @@ const MainNavbar = ({ isUser, logOut }) => {
                 )}
               </button>
 
-              {/* {isUser && (
+              {isUser && (
                 <Button
                   type="button"
                   variant="light"
                   className="position-relative"
-                  onClick={() => navigate(`/booking-confirmation/${paymentId}`)}
+                  onClick={() => navigate(`/booking-confirmation`)}
                 >
                   <Icon icon="mdi:receipt-text-outline" width="24" height="24" />
                   <span className="ms-2">การชำระเงิน</span>
                 </Button>
-              )} */}
+              )}
 
               {/* ธงภาษา */}
               <div className="d-flex align-items-center gap-1">
@@ -145,13 +145,9 @@ const MainNavbar = ({ isUser, logOut }) => {
                     className="rounded-circle bg-primary text-white d-flex justify-content-center align-items-center"
                     style={{ width: 32, height: 32 }}
                   >
-                    <i className="bi bi-person"></i>
-                  </div>
-                  <Navbar.Text className="text-dark fw-bold">
-                    {isUser.name} {isUser.lastname}
-                  </Navbar.Text>
-                  <Button
-                    variant="outline-dark"
+                    <Button
+                    variant=""
+                    className="rounded-circle"
                     size="sm"
                     onClick={logOut}
                     style={{
@@ -172,8 +168,13 @@ const MainNavbar = ({ isUser, logOut }) => {
                         "#18abdb"; /* กลับเป็นสีขอบเดิม */
                     }}
                   >
-                    ออกจากระบบ
+                    <i className="bi bi-person"></i>
                   </Button>
+                  </div>
+                  <Navbar.Text className="text-dark fw-medium bg-secondary bg-opacity-25 px-2 py-1 rounded">
+                    {isUser.name} {isUser.lastname}
+                  </Navbar.Text>
+                  
                 </div>
               ) : (
                 <div className="d-flex gap-2">
