@@ -10,10 +10,9 @@ import {
   Spinner,
   Alert,
 } from "react-bootstrap";
-// import dayjs from "dayjs";
 import "dayjs/locale/th";
-import { useNavigate, } from "react-router-dom";
-import useAuth from "../../../hooks/useAuth";
+// import { useNavigate } from "react-router-dom";
+// import useAuth from "../../../hooks/useAuth";
 import SearchBox from "../../../layouts/common/SearchBox";
 import LoginModal from "../../main/auth/LoginModal";
 import AccommodationService from "../../../services/api/accommodation/accommodation.service";
@@ -21,18 +20,20 @@ import TypeService from "../../../services/api/accommodation/type.service";
 import FormatToBE from "../../../utils/FormatToBE";
 import { Icon } from "@iconify-icon/react";
 import "/src/css/SearchPage.css";
+import roomImageMap from "./roomImageMap";
+import { Medium } from "react-bootstrap-icons";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const SearchPage = () => {
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [originalResults, setOriginalResults] = useState([]);
 
-  const { isLoggedIn } = useAuth();
+  // const { isLoggedIn } = useAuth();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [selectedAccommodation, setSelectedAccommodation] = useState([]);
   const [expandedFacilities, setExpandedFacilities] = useState({});
@@ -74,15 +75,14 @@ const SearchPage = () => {
       try {
         const res = destination
           ? await AccommodationService.getSearch(
-            checkIn,
-            checkOut,
-            adults,
-            children
-          )
+              checkIn,
+              checkOut,
+              adults,
+              children
+            )
           : await AccommodationService.getAll();
 
         setOriginalResults(res?.data || []);
-        
       } catch (error) {
         console.error("Error fetching search results:", error);
         setError("เกิดข้อผิดพลาดในการโหลดข้อมูลที่พัก");
@@ -146,8 +146,6 @@ const SearchPage = () => {
   const getDiscountedPrice = (accommodation) => {
     const originalPrice = accommodation.price_per_night || 0;
     const discountPercent = accommodation.promotions[0]?.discount || 0;
-    // console.log("DEBUG: facilities object = ", accommodation.facilities);
-    // console.log("DEBUG: facilities = ", accommodation.facilities.map((f, index) => f.name).join(', '));
 
     if (discountPercent > 0) {
       return Math.round(originalPrice * (1 - discountPercent / 100));
@@ -161,13 +159,16 @@ const SearchPage = () => {
   };
 
   useEffect(() => {
-  localStorage.setItem("bookingInfo", JSON.stringify({
-    checkIn,
-    checkOut,
-    adults,
-    children,
-  }));
-}, [checkIn, checkOut, adults, children]);
+    localStorage.setItem(
+      "bookingInfo",
+      JSON.stringify({
+        checkIn,
+        checkOut,
+        adults,
+        children,
+      })
+    );
+  }, [checkIn, checkOut, adults, children]);
 
   useEffect(() => {
     const storedAccommodation = localStorage.getItem("selectedAccommodation");
@@ -176,7 +177,7 @@ const SearchPage = () => {
         setSelectedAccommodation(JSON.parse(storedAccommodation));
       } catch (error) {
         console.error("Failed to parse stored selected accommodation:", error);
-        localStorage.removeItem("selectedAccommodation"); // กรณี parse fail ก็ลบทิ้ง
+        localStorage.removeItem("selectedAccommodation");
       }
     }
   }, []);
@@ -185,69 +186,56 @@ const SearchPage = () => {
     if (!selectedAccommodation.some((a) => a.id === acc.id)) {
       const newSelection = [...selectedAccommodation, acc];
       setSelectedAccommodation(newSelection);
-      localStorage.setItem("selectedAccommodation", JSON.stringify(newSelection));
+      localStorage.setItem(
+        "selectedAccommodation",
+        JSON.stringify(newSelection)
+      );
       window.dispatchEvent(new Event("accommodationChanged"));
     }
   };
 
-
-
-  const getUserId = () => {
-    const user = localStorage.getItem("user");
-    if (user) {
-      const userData = JSON.parse(user);
-      return userData.id;
-    }
-    return null;
-  }
-  const userId = getUserId();
-
-  // const handleBookingClick = (acc) => {
-  //   if (isLoggedIn) {
-  //     navigate("/booking", {
-  //       state: {
-  //         accommodation: acc,
-  //         checkIn,
-  //         checkOut,
-  //         adults,
-  //         children,
-  //       },
-  //     });
-  //   } else {
-  //     setSelectedAccommodation(acc);
-  //     setShowLoginModal(true);
+  // const getUserId = () => {
+  //   const user = localStorage.getItem("user");
+  //   if (user) {
+  //     const userData = JSON.parse(user);
+  //     return userData.id;
   //   }
+  //   return null;
   // };
-
-
-
 
   // Discounted price component
   const DiscountedPrice = ({ accommodation }) => {
     const originalPrice = parseInt(accommodation.price_per_night) || 0;
-    const discountPercent = parseInt(accommodation.promotions[0]?.discount) || 0;
+    const discountPercent =
+      parseInt(accommodation.promotions[0]?.discount) || 0;
     const discounted = parseInt(getDiscountedPrice(accommodation));
 
-
     return (
+      <>
       <div className="d-flex align-items-baseline mb-2">
         {discountPercent > 0 && (
           <>
-            <span className="text-decoration-line-through text-secondary me-2">
+            <span className="text-decoration-line-through text-secondary me-2 small"
+            style={{whiteSpace: "nowrap"}}>
               {parseInt(originalPrice).toLocaleString()} บาท
             </span>
-            <span className="text-danger fw-bold me-3">
-              ลด {discountPercent}%
+            <span className="text-danger fw-bold me-1"
+            style={{whiteSpace: "nowrap"}}>
+              -{discountPercent}%
             </span>
           </>
         )}
-        <span
-          className={`h5 fw-bold ${discountPercent > 0 ? "text-danger" : "text-success"
-            }`}
+      </div>
+       <span
+          className={`h5 fw-bold ${
+            discountPercent > 0 ? "text-danger" : "text-success"
+          }`}
+          style={{whiteSpace: "nowrap"}}
         >
           {discounted.toLocaleString()} บาท
         </span>
-      </div>
+      </>
+      
     );
   };
 
@@ -327,40 +315,63 @@ const SearchPage = () => {
                 </div>
 
                 {Object.entries(groupedResults).map(
-                  ([typeName, accommodations]) => (
-                    <div key={typeName} className="mb-5">
-                      <hr className="h-2" />
-                      <h2 className="mb-0 mt-2">{typeName}</h2>
+                  ([typeName, accommodations]) => {
+                    const representativeAcc = accommodations[0];
 
-                      <div className="container mt-4 p-3 border rounded bg-light">
-                        {accommodations.map((acc) => (
-                          <div key={acc.id} className="row mb-4">
-                            {/* Room Images */}
-                            <div className="col-md-4">
+                    return (
+                      <div key={typeName} className="mb-5">
+                        <hr className="h-2" />
+                        <h2 className="mb-0 mt-2">{typeName}</h2>
+
+                        <div className="container mt-4 border rounded bg-light">
+                          <div className="row">
+                            {/* ส่วนที่ 1: รูปภาพและข้อมูลห้อง */}
+                            <div className="col-md-4 bg-info bg-opacity-10 p-2 border-end">
                               <img
                                 src={
-                                  acc.image_name
-                                    ? `${BASE_URL}/uploads/accommodations/${acc.image_name}`
+                                  representativeAcc.image_name
+                                    ? `${BASE_URL}/uploads/accommodations/${representativeAcc.image_name}`
                                     : "https://picsum.photos/id/57/2000/3000"
                                 }
-                                alt={acc.name}
+                                alt={representativeAcc.name}
                                 className="img-fluid rounded mb-2"
                                 style={{
-                                  maxHeight: "200px",
+                                  aspectRatio: "4 / 3",
+                                  maxWidth: "100%",
+                                  maxHeight: "220px",
                                   objectFit: "cover",
                                 }}
                               />
-                              <div className="d-flex flex-wrap gap-2">
-                                {[1, 2].map((i) => (
+
+                              {/* Thumbnail Images */}
+                              <div className="d-flex flex-wrap gap-2 mb-2">
+                                {(
+                                  roomImageMap[representativeAcc.type?.name] ||
+                                  []
+                                ).map((img, idx) => (
                                   <img
-                                    key={i}
-                                    src="https://via.placeholder.com/90"
-                                    className="img-thumbnail"
-                                    alt={`Thumb ${i}`}
+                                    key={idx}
+                                    src={`/images/rooms/${img}`}
+                                    alt={`${
+                                      representativeAcc.type?.name
+                                    } thumbnail ${idx + 1}`}
+                                    className="rounded-2 object-fit-cover"
+                                    style={{
+                                      aspectRatio: "4 / 3",
+                                      maxWidth: "115px",
+                                      maxHeight: "100px",
+                                      objectFit: "cover",
+                                      borderRadius: "1rem",
+                                    }}
+                                    onError={(e) => {
+                                      e.target.src =
+                                        "/images/rooms/default-thumb.jpg";
+                                    }}
                                   />
                                 ))}
                               </div>
 
+                              {/* Room Features */}
                               <ul className="feature-list mt-3">
                                 <li>
                                   <Icon icon="la:bed" width="24" height="24" />
@@ -385,67 +396,108 @@ const SearchPage = () => {
                               </ul>
                             </div>
 
-                            {/* Facilities */}
-                            <div className="col-md-4">
-                              <ul className={`feature-listS ${expandedFacilities[acc.id] ? "expanded" : "collapsed"}`}>
-                                {acc.facilities.slice(0, expandedFacilities[acc.id] ? acc.facilities.length : 5).map((facility, index) => (
-                                  <li key={`acc-${acc.id}-fac-${index}`}>
-                                    <Icon icon={facility.icon_name} width="24" height="24" />
-                                    {facility.name}
-                                  </li>
-                                ))}
-                                {acc.facilities.length > 5 && (
+                            {/* ส่วนที่ 2: สิ่งอำนวยความสะดวก */}
+                            <div className="col-md-4 mt-3">
+                              <h5 className="mb-3 rounded-end fw-light w-75"
+                              style={{backgroundColor: "rgba(113, 191, 68, 1)",
+                                      color: "white"
+                                  }}>
+                                  สิ่งอำนวยความสะดวก</h5>
+                              <ul
+                                className={`feature-listS ${
+                                  expandedFacilities[representativeAcc.id]
+                                    ? "expanded"
+                                    : "collapsed"
+                                }`}
+                              >
+                                {representativeAcc.facilities
+                                  .slice(
+                                    0,
+                                    expandedFacilities[representativeAcc.id]
+                                      ? representativeAcc.facilities.length
+                                      : 5
+                                  )
+                                  .map((facility, index) => (
+                                    <li
+                                      key={`acc-${representativeAcc.id}-fac-${index}`}
+                                    >
+                                      <Icon
+                                        icon={facility.icon_name}
+                                        width="24"
+                                        height="24"
+                                      />
+                                      {facility.name}
+                                    </li>
+                                  ))}
+                                {representativeAcc.facilities.length > 5 && (
                                   <li
                                     onClick={() => {
                                       setExpandedFacilities((prev) => ({
                                         ...prev,
-                                        [acc.id]: !prev[acc.id],
+                                        [representativeAcc.id]:
+                                          !prev[representativeAcc.id],
                                       }));
                                     }}
                                     style={{ cursor: "pointer" }}
                                     className="dropdown-toggle-icon"
                                   >
                                     <Icon
-                                      icon={expandedFacilities[acc.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
+                                      icon={
+                                        expandedFacilities[representativeAcc.id]
+                                          ? "mdi:chevron-up"
+                                          : "mdi:chevron-down"
+                                      }
                                       width="24"
                                       height="24"
                                     />
+                                    {expandedFacilities[representativeAcc.id]
+                                      ? "แสดงน้อยลง"
+                                      : "แสดงเพิ่มเติม"}
                                   </li>
                                 )}
                               </ul>
                             </div>
 
-                            {/* Prices & Booking */}
-                            <div className="col-md-4">
-                              <div className="border rounded p-3 mb-3 bg-white">
-                                {acc.discount > 0 && (
-                                  <div className="text-success mb-2">
-                                    มีคูปองส่วนลด {acc.promotions[0]?.discount}%
+                            {/* ส่วนที่ 3: ตัวเลือกราคา */}
+                            <div className="col-md-4 border-start bg-white">
+                              <div className="price-options-container ">
+                                {accommodations.map((acc) => (
+                                  <div
+                                    key={acc.id}
+                                    className="price-option-card mb-3 mt-3 p-3 border-bottom bg-white"
+                                  >
+                                    <div className="d-flex justify-content-between align-items-start">
+                                      <div>
+                                        {acc.promotions?.[0]?.discount > 0 }
+                                        <DiscountedPrice accommodation={acc} />
+                                        <div className="text-muted small">
+                                          ราคาต่อคืน (ก่อนรวมภาษีและค่าธรรมเนียม)
+                                        </div>
+                                      </div>
+                                      <Button
+                                        variant="success"
+                                        size="sm"
+                                        onClick={() => handleAddToBooking(acc)}
+                                        disabled={selectedAccommodation.some(
+                                          (a) => a.id === acc.id
+                                        )}
+                                      >
+                                        {selectedAccommodation.some(
+                                          (a) => a.id === acc.id
+                                        )
+                                          ? "เพิ่มแล้ว"
+                                          : "เพิ่ม"}
+                                      </Button>
+                                    </div>
                                   </div>
-                                )}
-
-                                <DiscountedPrice accommodation={acc} />
-
-                                <div className="text-muted small mb-2">
-                                  ราคาต่อคืน (ก่อนรวมภาษีและค่าธรรมเนียม)
-                                </div>
-
-                                <Button
-                                  variant="success"
-                                  onClick={() => handleAddToBooking(acc)}
-                                  disabled={selectedAccommodation.some((a) => a.id === acc.id)}
-                                >
-                                  {selectedAccommodation.some((a) => a.id === acc.id)
-                                    ? "เพิ่มแล้ว"
-                                    : "เพิ่มห้องนี้"}
-                                </Button>
+                                ))}
                               </div>
                             </div>
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-                  )
+                    );
+                  }
                 )}
               </>
             ) : (
@@ -467,10 +519,10 @@ const SearchPage = () => {
 
       <LoginModal
         show={showLoginModal}
-        handleClose={(handleCloseModal)}
+        handleClose={handleCloseModal}
         onLoginSuccess={() => {
           handleCloseModal();
-          setTimeout(() => window.location.reload(), 300); // reload หลังปิด modal
+          setTimeout(() => window.location.reload(), 300);
         }}
       />
     </Container>
