@@ -326,7 +326,7 @@ const SearchPage = () => {
                         <div className="container mt-4 border rounded bg-light">
                           <div className="row">
                             {/* ส่วนที่ 1: รูปภาพและข้อมูลห้อง */}
-                            <div className="col-md-4 bg-info bg-opacity-10 p-2 border-end">
+                            <div className="col-md-4 bg-info bg-opacity-10 py-3 border-end">
                               <img
                                 src={
                                   representativeAcc.image_name
@@ -379,7 +379,7 @@ const SearchPage = () => {
                                 </li>
                                 <li>
                                   <Icon
-                                    icon="fluent:table-resize-column-16-regular"
+                                    icon="ri:custom-size"
                                     width="27"
                                     height="27"
                                   />
