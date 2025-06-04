@@ -4,6 +4,7 @@ import { Button, Container, Row, Col, Table, Spinner, Alert, Form } from 'react-
 import axios from 'axios';
 import dayjs from 'dayjs';
 import 'dayjs/locale/th';
+import { format } from 'date-fns';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -95,6 +96,7 @@ const BookingConfirmation = () => {
   }
 
   const {
+    id,
     roomIds,
     checkIn,
     checkOut,
@@ -105,114 +107,127 @@ const BookingConfirmation = () => {
   } = paymentData;
 
   const handleMockPayment = async () => {
-  try {
-    const res = await axios.post(`${BASE_URL}/api/payment/confirm/${paymentData._id}`);
-    console.log('Payment confirmed:', res.data);
-    alert('อัปเดตสถานะเป็น "ชำระเงินแล้ว" สำเร็จ');
-    setPaymentData({ ...paymentData, status: 'paid' }); // จำลองการอัปเดตสถานะ
-  } catch (err) {
-    console.error(err);
-    alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
-  }
-};
+    try {
+      const res = await axios.post(`${BASE_URL}/api/payment/confirm/${paymentData._id}`);
+      console.log('Payment confirmed:', res.data);
+      alert('อัปเดตสถานะเป็น "ชำระเงินแล้ว" สำเร็จ');
+      setPaymentData({ ...paymentData, status: 'paid' }); // จำลองการอัปเดตสถานะ
+    } catch (err) {
+      console.error(err);
+      alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+    }
+  };
 
   const formatDate = (dateStr) =>
     dateStr ? dayjs(dateStr).locale('th').format('DD MMMM YYYY') : '-';
 
   return (
     <Container className="my-5 p-4 border rounded shadow-sm bg-white" style={{ maxWidth: 700 }}>
-      <div className="text-center mb-4">
-        <img src="https://www.baraliresort.com/images/logo.png" alt="Barali Logo" style={{ height: 80 }} />
-        <h5 className="mt-3">สรุปข้อมูลการจอง</h5>
+      <div className="d-flex align-items-start mb-4">
+  <img
+    src="https://www.baraliresort.com/images/logo.png"
+    alt="Barali Logo"
+    style={{ height: 80 }}
+  />
+  <div className="ms-3">
+    <span className="fw-medium d-block">บาราลี บีช รีสอร์ท</span>
+    <span className="d-block text-muted small">77 หาดคลองพร้าว เกาะช้าง</span>
+    <span className="d-block text-muted small">23170 จังหวัดตราด ประเทศไทย</span>
+  </div>
+  <div className="ms-auto text-end">
+    <span>หมายเลขการชำระเงิน: {id}</span>
+  </div>
+</div>
+      <div className="mb-3">
+        <h5 className="mt-3 text-center ">สรุปข้อมูลการจอง</h5>
       </div>
 
-      <Row className="mb-3">
-        <Col><strong>ข้อมูลผู้จอง</strong></Col>
+      <Row className="mb-3 bg-info bg-opacity-25 p-1 text-center">
+        <Col><medium>ข้อมูลผู้จอง</medium></Col>
       </Row>
-      <Table bordered>
-        <tbody>
-          <tr>
-            <td>ชื่อผู้จอง</td>
-            <td>{user?.name || '-'}</td>
-          </tr>
-          <tr>
-            <td>อีเมล</td>
-            <td>{user?.email || '-'}</td>
-          </tr>
-        </tbody>
-      </Table>
 
-      <Row className="mt-4 mb-3">
-        <Col><strong>รายละเอียดการจอง</strong></Col>
-      </Row>
-      <Table bordered>
-        <tbody>
-          <tr>
-            <td>วันที่เช็คอิน</td>
-            <td>{formatDate(checkIn)}</td>
-          </tr>
-          <tr>
-            <td>วันที่เช็คเอาท์</td>
-            <td>{formatDate(checkOut)}</td>
-          </tr>
-          <tr>
-            <td>จำนวนห้อง</td>
-            <td>{Array.isArray(roomIds) ? roomIds.length : '-'}</td>
-          </tr>
-          <tr>
-            <td>ผู้ใหญ่</td>
-            <td>{adults ?? '-'}</td>
-          </tr>
-          <tr>
-            <td>เด็ก</td>
-            <td>{children ?? '-'}</td>
-          </tr>
-        </tbody>
-      </Table>
 
-      <Row className="mt-4 mb-3">
-        <Col><strong>ราคาทั้งหมด</strong></Col>
+      <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+        <div><medium>ชื่อผู้เข้าพัก</medium></div>
+        <div>{user?.name || '-'} {user?.lastname || '-'}</div>
+      </div>
+
+      <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+        <div><medium>อีเมล</medium></div>
+        <div>{user?.email || '-'}</div>
+      </div>
+
+      <Row className="mt-4 mb-3 bg-info bg-opacity-25 p-1 text-center">
+        <Col><medium>รายละเอียดการจอง</medium></Col>
       </Row>
-      <Table bordered>
-        <tbody>
-          <tr>
-            <td>ยอดรวม</td>
-            <td>{!isNaN(parseInt(totalPrice)) ? parseInt(totalPrice).toLocaleString() : '-'} บาท</td>
-          </tr>
-          <tr>
-            <td>ครบกำหนดชำระ</td>
-            <td>{formatDate(dueDate)}</td>
-          </tr>
-        </tbody>
-      </Table>
+      
+        
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>วันที่เช็คอิน</medium></div>
+            <div>{formatDate(checkIn)}</div>
+          </div>
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>วันที่เช็คเอาท์</medium></div>
+            <div>{formatDate(checkOut)}</div>
+          </div>
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>จำนวนห้อง</medium></div>
+            <div>{Array.isArray(roomIds) ? roomIds.length : '-'}</div>
+          </div>
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>ผู้ใหญ่</medium></div>
+            <div>{adults ?? '-'}</div>
+          </div>
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>เด็ก</medium></div>
+            <div>{children ?? '-'}</div>
+          </div>
+        
+      
+
+      <Row className="mt-4 mb-3 bg-info bg-opacity-25 p-1 text-center">
+        <Col><medium>ราคาทั้งหมด</medium></Col>
+      </Row>
+      
+        
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>ยอดรวม</medium></div>
+            <div>{!isNaN(parseInt(totalPrice)) ? parseInt(totalPrice).toLocaleString() : '-'}</div>
+          </div>
+          <div className="mb-2 d-flex justify-content-between align-items-center px-3 py-2 ">
+            <div><medium>วันครบกําหนดชําระ</medium></div>
+            <div>{formatDate(dueDate)}</div>
+          </div>
+        
+      
 
       {paymentData?.status !== 'paid' ? (
-  <>
-    <Row className="mt-4 mb-3">
-      <Col><strong>QR Code สำหรับชำระเงิน (จำลอง)</strong></Col>
-    </Row>
-    <div className="text-center mb-3">
-      <img
-        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.youtube.com/watch?v=8WCmS9fIlZo`}
-        alt="QR Code"
-        style={{ border: '1px solid #ccc', padding: 10, background: '#fff' }}
-      />
-      <div className="text-muted mt-2" style={{ fontSize: '0.9em' }}>
-        สแกนเพื่อชำระเงิน (ปลอม ๆ 😆)
-      </div>
-    </div>
+        <>
+          <Row className="mt-4 mb-3 text-center">
+            <Col><medium>QR Code สำหรับชำระเงิน (จำลอง)</medium></Col>
+          </Row>
+          <div className="text-center mb-3">
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://www.youtube.com/watch?v=8WCmS9fIlZo`}
+              alt="QR Code"
+              style={{ border: '1px solid #ccc', padding: 10, background: '#fff' }}
+            />
+            <div className="text-muted mt-2" style={{ fontSize: '0.9em' }}>
+              สแกนเพื่อชำระเงิน (ปลอม ๆ 😆)
+            </div>
+          </div>
 
-    <div className="text-center">
-      <Button variant="success" onClick={handleMockPayment}>
-        ฉันได้ชำระเงินแล้ว (จำลอง)
-      </Button>
-    </div>
-  </>
-) : (
-  <Alert variant="success" className="mt-4 text-center">
-    ✅ ชำระเงินเรียบร้อยแล้ว
-  </Alert>
-)}
+          <div className="text-center">
+            <Button variant="success" onClick={handleMockPayment}>
+              ฉันได้ชำระเงินแล้ว (จำลอง)
+            </Button>
+          </div>
+        </>
+      ) : (
+        <Alert variant="success" className="mt-4 text-center">
+          ✅ ชำระเงินเรียบร้อยแล้ว
+        </Alert>
+      )}
     </Container>
   );
 };

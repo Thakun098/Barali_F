@@ -27,7 +27,7 @@ const ActivityCard = ({ activity }) => {
                     onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.02)"}
                     onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
                 >
-                    <div className="activity-image-container position-relative" style={{ height: "200px" }}>
+                    <div className="activity-image-container position-relative" style={{ height: "320px" }}>
                         <img
                             src={imageUrl}
                             alt={title}

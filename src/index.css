@@ -41,3 +41,9 @@ body {
   border-radius: 8px;
   padding: 6px 12px;
 }
+
+/* .price-option-card {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+} */

@@ -122,7 +122,7 @@ const MainNavbar = ({ isUser, logOut }) => {
                   className="position-relative"
                   onClick={() => navigate(`/booking-confirmation`)}
                 >
-                  <Icon icon="mdi:receipt-text-outline" width="24" height="24" />
+                  <Icon icon="material-symbols-light:receipt-outline" width="24" height="24" />
                   <span className="ms-2">การชำระเงิน</span>
                 </Button>
               )}
