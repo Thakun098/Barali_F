@@ -57,7 +57,7 @@ const HomePage = () => {
   <div className="container">
     <div className="row">
       <div className="col-md-3 col-6 mb-3">
-        <h6 className="fw-bold">เกี่ยวกับเรือรัฟ</h6>
+        <h6 className="fw-bold">เกี่ยวกับเรา</h6>
         <ul className="list-unstyled">
           <li>หน้าหลัก</li>
           <li>ห้องพักเรา</li>
