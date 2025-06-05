@@ -24,7 +24,6 @@ const BookingPage = () => {
   const { state } = useLocation();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchParams] = useSearchParams();
-  const [paymentData , setPaymentData] = useState(null);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [expandedFacilities, setExpandedFacilities] = useState({});
@@ -40,10 +39,6 @@ const BookingPage = () => {
     adults = parseInt(searchParams.get("adults")) || 1,
     children = parseInt(searchParams.get("children")) || 0,
   } = state || {};
-
-  const payment = paymentData
-
-
 
   console.log(accommodation, checkIn, checkOut);
 
@@ -114,7 +109,7 @@ const BookingPage = () => {
     };
   };
 
-  const { discountedPrice, totalPrice } = calculatePrices();
+  const { totalPrice } = calculatePrices();
   const handleCloseModal = () => {
     setShowLoginModal(false);
   };
@@ -152,32 +147,32 @@ const BookingPage = () => {
     console.log("ยืนยันการจอง:", bookingData);
 
     try {
-  const payment = await BookingService.MakeBooking(
-    userId,
-    accommodation.map((room) => room.id),
-    checkIn,
-    checkOut,
-    adults,
-    children,
-    specialRequest,
-    totalPrice
-  );
 
-  setPaymentData(payment.data);
-  setLoading(false);
+      bookingData ? await BookingService.MakeBooking(
+        userId,
+        accommodation.map((room) => room.id),
+        checkIn,
+        checkOut,
+        adults,
+        children,
+        specialRequest,
+        totalPrice
+      )
+        : setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
+      setLoading(false);
 
-  console.log("ยืนยันการจอง:", payment.data);
+      console.log("ยืนยันการจอง:", bookingData);
+      localStorage.removeItem("selectedAccommodation");
+      navigate("/booking-confirmation", { state: bookingData });
 
-  localStorage.removeItem("selectedAccommodation");
-  navigate("/booking-confirmation", { state: payment.data });
 
-} catch (err) {
-  console.error("การจองล้มเหลว:", err);
-  setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
-} finally {
-  setIsSubmitting(false);
-}
-  }
+    } catch (err) {
+      console.error("การจองล้มเหลว:", err);
+      setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!state || !state.accommodation || !Array.isArray(state.accommodation)) {
     return (
@@ -572,6 +567,5 @@ const BookingPage = () => {
     </div>
   );
 };
-
 
 export default BookingPage;

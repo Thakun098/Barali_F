@@ -37,13 +37,23 @@ const getAvailableRooms = (formattedCheckIn, formattedCheckOut) => {
     }
   });
 }
+
+const getAvailablePromotions = (formattedCheckIn, formattedCheckOut) => {
+  return axios.get(`${BASE_URL}/api/accommodation/promotion/availability`, {
+    params: {
+      checkIn: formattedCheckIn,
+      checkOut: formattedCheckOut
+    }
+  });
+}
  
 const AccommodationService = {
     getPopularRoom,
     getPromotion,
     getAll,
     getSearch,
-    getAvailableRooms
+    getAvailableRooms,
+    getAvailablePromotions
 }
  
 export default AccommodationService;

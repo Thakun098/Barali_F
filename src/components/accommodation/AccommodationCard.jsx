@@ -2,6 +2,13 @@ import Button from "react-bootstrap/Button";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import { Icon } from "@iconify/react";
+import { Link } from "react-router-dom";
+import dayjs from "dayjs";
+import "dayjs/locale/th";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import GetRoomAvailability from "../common/GetRoomAvailability";
+import LoginModal from "../../pages/main/auth/LoginModal";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -18,9 +25,59 @@ const getThaiRoomTypeName = (typeName) => {
 };
 
 const AccommodationCard = ({ accommodation, availabilityRooms, promotion }) => {
+  const navigate = useNavigate();
   const fullImageUrl = `${BASE_URL}/uploads/accommodations/${accommodation.image_name}`;
   const originalPrice = accommodation.price_per_night;
   const discountPercent = promotion?.discount ?? 0;
+
+  //getDateToSendToBooking
+  const tomorrow = dayjs(new Date()).add(1, "day").format("YYYY-MM-DD");
+  const theDayAfterTomorrow = dayjs(tomorrow).add(1, "day").format("YYYY-MM-DD");
+
+  //setDate
+  const checkIn = tomorrow;
+  const checkOut = theDayAfterTomorrow;
+
+  //guest
+  const adults = 1;
+  const children = 0;
+
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const checkLoginAndShowModal = () => {
+    const user = localStorage.getItem("user");
+    if (!user) {
+      setShowLoginModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  // Example usage: call this function before booking
+  const handleBookClick = () => {
+    const user = localStorage.getItem("user");
+    if (checkLoginAndShowModal()) {
+      let userId = null;
+      if (user) {
+        try {
+          userId = JSON.parse(user).id; // Adjust 'id' if your user object uses a different key
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          userId = null;
+        }
+      }
+      navigate("/booking", {
+        state: {
+          accommodation: [accommodation],
+          checkIn,
+          checkOut,
+          adults,
+          children,
+          userId, // Pass userId to booking
+        },
+      });
+    }
+  };
 
   const discountedPrice =
     originalPrice && discountPercent
@@ -34,98 +91,117 @@ const AccommodationCard = ({ accommodation, availabilityRooms, promotion }) => {
     : "ไม่ระบุประเภท";
 
   return (
-    <div className="border rounded p-3 shadow-sm h-100">
-      <Row>
-        <Col xs={12} md={5}>
-          <div
-            style={{
-              width: "100%",
-              height: "clamp(150px, 25vw, 230px)",
-              overflow: "hidden",
-              borderRadius: "0.5rem",
-            }}
-          >
-            <img
-              src={fullImageUrl}
-              alt={accommodation.name}
+    <>
+      <div className="border rounded p-3 shadow-sm h-100">
+        <Row>
+          <Col xs={12} md={5}>
+            <div
               style={{
                 width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                display: "block",
+                height: "clamp(150px, 25vw, 230px)",
+                overflow: "hidden",
+                borderRadius: "0.5rem",
               }}
-            />
-          </div>
-        </Col>
+            >
+              <img
+                src={fullImageUrl}
+                alt={accommodation.name}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </div>
+          </Col>
 
-        <Col md={7} style={{ paddingLeft: "2rem" }}>
-          <div className="d-flex flex-column h-100 justify-content-between">
-            <div>
-              <h5 className="fs-4">
-                {accommodation.name}
-                <small className="text-dark"> {roomTypeDisplay}</small>
-              </h5>
-              <p className="mb-1 text-dark">
-                {availabilityRooms > 0
-                  ? `เหลือ ${availabilityRooms} ห้อง`
-                  : "ขณะนี้ไม่มีห้องว่าง"}
-              </p>
+          <Col md={7} style={{ paddingLeft: "2rem" }}>
+            <div className="d-flex flex-column h-100 justify-content-between">
+              <div>
+                <h5 className="fs-4">
+                  {accommodation.name}
+                  <small className="text-dark"> {roomTypeDisplay}</small>
+                </h5>
+                <p className="mb-1 text-dark">
+                  {availabilityRooms > 0
+                    ? `เหลือ ${availabilityRooms} ห้อง`
+                    : "ขณะนี้ไม่มีห้องว่าง"}
+                </p>
 
-              <Row>
-                <Col xs={8}>
-                  <ul className="list-unstyled mb-2">
-                    <li>📐 ขนาดห้อง: {accommodation.type?.room_size} ตร.ม.</li>
-                    <li>🌄 วิว: {accommodation.type?.view}</li>
-                    <li>🛏 เตียง: {accommodation.type?.bed_type}</li>
-                  </ul>
-                </Col>
+                <Row>
+                  <Col xs={8}>
+                    <ul className="list-unstyled mb-2">
+                      <li>
+                        <Icon icon="ix:width" width="24" height="24" /> ขนาดห้อง:{" "}
+                        {accommodation.type?.room_size} ตร.ม.
+                      </li>
+                      <li>
+                        <Icon icon="cil:window" width="24" height="24" /> วิว:{" "}
+                        {accommodation.type?.view}
+                      </li>
+                      <li>
+                        <Icon icon="la:bed" width="24" height="24" /> เตียง:{" "}
+                        {accommodation.type?.bed_type}
+                      </li>
+                    </ul>
+                  </Col>
 
-                <Col
-                  xs={4}
-                  className="d-flex flex-column justify-content-center align-items-center"
-                >
-                  <span
-                    className={`h4 ${
-                      discountPercent ? "text-danger" : "text-dark"
-                    }`}
+                  <Col
+                    xs={4}
+                    className="d-flex flex-column justify-content-center align-items-center"
                   >
-                    {discountedPrice?.toLocaleString()}&nbsp;บาท
-                  </span>
-                  <small style={{ fontSize: "11px" }}>
-                    รวมค่าธรรมเนียมและภาษี
-                  </small>
-                </Col>
-              </Row>
-            </div>
+                    <span
+                      className={`h4 ${
+                        discountPercent ? "text-danger" : "text-dark"
+                      }`}
+                    >
+                      {discountedPrice?.toLocaleString()}&nbsp;บาท
+                    </span>
+                    <small style={{ fontSize: "11px" }}>
+                      รวมค่าธรรมเนียมและภาษี
+                    </small>
+                  </Col>
+                </Row>
+              </div>
 
-            <div className="mt-3 d-flex gap-2">
-              <Button variant="outline-secondary" size="sm">
-                <Icon
-                  icon="hugeicons:folder-details"
-                  width="24"
-                  height="24"
-                  className="me-1"
-                />
-                รายละเอียดห้องพัก
-              </Button>
-              <Button
+              <div className="mt-3 d-flex gap-2">
+                <Button 
+                variant="outline-secondary"
                 size="sm"
-                className="border-0 shadow-none"
-                style={{ backgroundColor: "#00BAF2", color: "white" }}
-              >
-                <Icon
-                  icon="mynaui:click"
-                  width="24"
-                  height="24"
-                  className="me-1"
-                />
-                จองเลย
-              </Button>
+                onClick={handleBookClick}
+                disabled={!availabilityRooms}
+                >
+                  <Icon
+                    icon="hugeicons:folder-details"
+                    width="24"
+                    height="24"
+                    className="me-1"
+                  />
+                  รายละเอียดห้องพัก
+                </Button>
+                <Button
+                  size="sm"
+                  className="border-0 shadow-none"
+                  style={{ backgroundColor: "#00BAF2", color: "white" }}
+                  onClick={handleBookClick}
+                  disabled={!availabilityRooms}
+                >
+                  <Icon
+                    icon="mynaui:click"
+                    width="24"
+                    height="24"
+                    className="me-1"
+                  />
+                  จองเลย
+                </Button>
+              </div>
             </div>
-          </div>
-        </Col>
-      </Row>
-    </div>
+          </Col>
+        </Row>
+      </div>
+      <LoginModal show={showLoginModal} onHide={() => setShowLoginModal(false)} />
+    </>
   );
 };
 

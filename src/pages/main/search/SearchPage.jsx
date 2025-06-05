@@ -212,30 +212,33 @@ const SearchPage = () => {
 
     return (
       <>
-      <div className="d-flex align-items-baseline mb-2">
-        {discountPercent > 0 && (
-          <>
-            <span className="text-decoration-line-through text-secondary me-2 small"
-            style={{whiteSpace: "nowrap"}}>
-              {parseInt(originalPrice).toLocaleString()} บาท
-            </span>
-            <span className="text-danger fw-bold me-1"
-            style={{whiteSpace: "nowrap"}}>
-              -{discountPercent}%
-            </span>
-          </>
-        )}
-      </div>
-       <span
+        <div className="d-flex align-items-baseline mb-2">
+          {discountPercent > 0 && (
+            <>
+              <span
+                className="text-decoration-line-through text-secondary me-2 small"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                {parseInt(originalPrice).toLocaleString()} บาท
+              </span>
+              <span
+                className="text-danger fw-bold me-1"
+                style={{ whiteSpace: "nowrap" }}
+              >
+                -{discountPercent}%
+              </span>
+            </>
+          )}
+        </div>
+        <span
           className={`h5 fw-bold ${
             discountPercent > 0 ? "text-danger" : "text-success"
           }`}
-          style={{whiteSpace: "nowrap"}}
+          style={{ whiteSpace: "nowrap" }}
         >
           {discounted.toLocaleString()} บาท
         </span>
       </>
-      
     );
   };
 
@@ -397,12 +400,18 @@ const SearchPage = () => {
                             </div>
 
                             {/* ส่วนที่ 2: สิ่งอำนวยความสะดวก */}
-                            <div className="col-md-4 mt-3">
-                              <h5 className="mb-3 rounded-end fw-light w-75"
-                              style={{backgroundColor: "rgba(113, 191, 68, 1)",
-                                      color: "white"
-                                  }}>
-                                  สิ่งอำนวยความสะดวก</h5>
+                            <div className="col-md-4 mt-3 ps-0">
+                              <h5
+                                className="mb-3 rounded-end fw-light"
+                                style={{
+                                  backgroundColor: "rgba(113, 191, 68, 1)",
+                                  color: "white",
+                                  padding: "0.5rem 1rem",
+                                }}
+                              >
+                                สิ่งอำนวยความสะดวก
+                              </h5>
+
                               <ul
                                 className={`feature-listS ${
                                   expandedFacilities[representativeAcc.id]
@@ -468,15 +477,17 @@ const SearchPage = () => {
                                   >
                                     <div className="d-flex justify-content-between align-items-start">
                                       <div>
-                                        {acc.promotions?.[0]?.discount > 0 }
+                                        {acc.promotions?.[0]?.discount > 0}
                                         <DiscountedPrice accommodation={acc} />
                                         <div className="text-muted small">
-                                          ราคาต่อคืน (ก่อนรวมภาษีและค่าธรรมเนียม)
+                                          ราคาต่อคืน
+                                          (ก่อนรวมภาษีและค่าธรรมเนียม)
                                         </div>
                                       </div>
                                       <Button
-                                        variant="success"
+                                        variant="info"
                                         size="sm"
+                                        className="text-white mt-auto"
                                         onClick={() => handleAddToBooking(acc)}
                                         disabled={selectedAccommodation.some(
                                           (a) => a.id === acc.id

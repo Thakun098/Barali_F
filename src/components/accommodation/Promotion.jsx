@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import AccommodationService from "../../services/api/accommodation/accommodation.service";
 import AccommodationCard from "./AccommodationCard";
 import { Spinner, Button } from "react-bootstrap";
-import GetRoomAvailability from "../common/GetRoomAvailability";
+import GetPromotionAvailability from "../common/GetPromotionAvailability";
 import dayjs from "dayjs";
 import "dayjs/locale/th";
 import { Icon } from "@iconify/react";
@@ -35,7 +35,7 @@ useEffect(() => {
     const fetchData = async () => {
             if (checkInDate && checkOutDate) {
                 // console.log("📡 Fetching room availability", { checkInDate, checkOutDate });
-                const result = await GetRoomAvailability(checkInDate, checkOutDate);
+                const result = await GetPromotionAvailability(checkInDate, checkOutDate);
                 // console.log("✅ Availability data:", result);
                 setAvailabilityData(result);
             }
@@ -115,7 +115,7 @@ useEffect(() => {
               >
                 <AccommodationCard
                   accommodation={acc}
-                  // availabilityRooms={availabilityData[acc.type_id] ?? 0}
+                  availabilityRooms={availabilityData[acc.type_id] ?? 0}
                   promotion={acc.promotions?.[0]}
                 />
               </div>

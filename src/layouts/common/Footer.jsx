@@ -3,7 +3,10 @@ import { Container, Row, Col } from 'react-bootstrap';
 
 const Footer = () => {
   return (
-    <footer className="bg-white border-top py-4">
+    <footer className="bg-white border-top py-4"
+     style={{ position: "relative", bottom: "0", width: "100%", 
+                marginTop: "200px"
+      }}>
       <Container>
         <Row className="align-items-center">
           {/* ซ้าย: ข้อมูลรีสอร์ท */}
