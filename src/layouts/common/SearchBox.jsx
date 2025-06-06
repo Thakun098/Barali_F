@@ -31,8 +31,6 @@ export default function SearchBar() {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
 
-
-  const today = new Date();
   const tomorrow = dayjs().add(1, 'day').startOf('day').toDate();
 
   useEffect(() => {
@@ -57,6 +55,33 @@ export default function SearchBar() {
       setCheckOutDate(dayjs().add(2, 'day').toDate());
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const isValidCombo =
+      (adults === 1 && (children === 2 || children === 3)) ||
+      ((adults === 2 || adults === 3) && children === 1);
+
+    if (!isValidCombo && children > 0) {
+      alert(
+        "รูปแบบผู้ใหญ่และเด็กที่เลือกไม่รองรับ:\nรองรับเฉพาะ:\n- ผู้ใหญ่ 1 เด็ก 2-3\n- ผู้ใหญ่ 2-3 เด็ก 1"
+      );
+      setChildren(0); // หรือจะ reset ทั้งคู่ก็ได้: setAdults(1); setChildren(0);
+    }
+  }, [adults, children]);
+
+  useEffect(() => {
+  const allowed = getAvailableChildrenOptions();
+  if (!allowed.includes(children)) {
+    setChildren(0); // reset ถ้าค่าเกินจากที่ควรเลือกได้
+  }
+}, [adults]);
+
+  const getAvailableChildrenOptions = () => {
+    if (adults === 4) return [0];
+    if (adults === 2 || adults === 3) return [0, 1];
+    if (adults === 1) return [0, 1, 2, 3];
+    return [0]; // fallback
+  };
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -186,18 +211,31 @@ export default function SearchBar() {
               <div className="px-3 py-2" style={{ minWidth: '220px' }}>
                 <Form.Group className="mb-2">
                   <Form.Label>ผู้ใหญ่ (สูงสุด 4)</Form.Label>
-                  <Form.Select value={adults} onChange={e => setAdults(Number(e.target.value))}>
-                    {[1, 2, 3, 4].map(n => (
+                  <Form.Select
+                    value={adults}
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
+                      if (value === 0) return; // ไม่อนุญาต 0 ผู้ใหญ่
+                      setAdults(value);
+                    }}
+                  >
+                    {[1, 2, 3, 4].map((n) => (
                       <option key={n} value={n}>{n}</option>
                     ))}
                   </Form.Select>
                 </Form.Group>
 
                 <Form.Group className="mb-2">
-                  <Form.Label>เด็ก (สูงสุด 2)</Form.Label>
-                  <Form.Select value={children} onChange={e => setChildren(Number(e.target.value))}>
-                    {[0, 1, 2].map(n => (
-                      <option key={n} value={n}>{n}</option>
+                  <Form.Label>เด็ก</Form.Label>
+                  <Form.Select
+                    value={children}
+                    onChange={e => setChildren(Number(e.target.value))}
+                    disabled={adults === 4}
+                  >
+                    {getAvailableChildrenOptions().map(n => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
                     ))}
                   </Form.Select>
                 </Form.Group>

@@ -183,6 +183,11 @@ const SearchPage = () => {
   }, []);
 
   const handleAddToBooking = (acc) => {
+
+     if (selectedAccommodation.length >= 9) {
+    alert("คุณสามารถเลือกห้องพักได้ไม่เกิน 9 ห้องเท่านั้น");
+    return;
+  }
     if (!selectedAccommodation.some((a) => a.id === acc.id)) {
       const newSelection = [...selectedAccommodation, acc];
       setSelectedAccommodation(newSelection);

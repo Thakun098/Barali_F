@@ -25,6 +25,7 @@ const BookingPage = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [paymentData , setPaymentData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [expandedFacilities, setExpandedFacilities] = useState({});
   const [error, setError] = useState(null);
@@ -88,28 +89,72 @@ const BookingPage = () => {
 
   const calculatePrices = () => {
     if (!Array.isArray(accommodation) || accommodation.length === 0) {
-      return { discountedPrice: 0, totalPrice: 0 };
+      return { discountedPrice: 0, totalPrice: 0, extraDetails: [] };
     }
 
+    const extraBedForAdult = 1000;
+    const extraBedForChildren = 749;
+
     let total = 0;
+    const extraDetails = [];
 
     accommodation.forEach((room) => {
-      const basePrice = room.price_per_night;
-      const discount = room.promotions[0]?.discount || 0;
-      const discounted = discount > 0
-        ? Math.round(basePrice * (1 - discount / 100))
-        : basePrice;
+      const basePricePerNight = room.price_per_night;
+      const nightsCount = nights;
 
-      total += discounted * nights;
+      const priceWithoutDiscount = basePricePerNight * nightsCount;
+
+      const discountPercent = room.promotions?.reduce((sum, promo) => sum + promo.discount, 0) || 0;
+
+      let discountedPrice = priceWithoutDiscount;
+      if (discountPercent > 0) {
+        discountedPrice -= priceWithoutDiscount * discountPercent / 100;
+      }
+
+      // Extra charges
+      let extraAdultCount = Math.max(0, adults - 2);
+      let extraChildren = 0;
+
+      if (adults === 1 && children > 2) {
+        extraChildren = children - 2;
+      } else if (adults >= 2 && children >= 1) {
+        extraChildren = Math.max(0, children - 1);
+      }
+
+      if (adults >= 2 && children === 1) {
+        extraChildren = 1;
+      }
+
+      const extraAdultCost = extraAdultCount * extraBedForAdult * nightsCount;
+      const extraChildrenCost = extraChildren * extraBedForChildren * nightsCount;
+
+      const totalPriceForRoom = discountedPrice + extraAdultCost + extraChildrenCost;
+
+      total += totalPriceForRoom;
+
+      // เพิ่มรายละเอียดห้องลงใน extraDetails
+      extraDetails.push({
+        roomId: room.id,
+        roomName: room.name || `Room ${room.id}`,
+        extraAdults: extraAdultCount,
+        extraAdultCost: extraAdultCost,
+        extraChildren: extraChildren,
+        extraChildrenCost: extraChildrenCost,
+        nights: nightsCount,
+        discountedBasePrice: discountedPrice,
+        totalPriceForRoom,
+      });
     });
 
     return {
-      discountedPrice: "-", // ไม่สามารถสรุปราคาเดียวได้ในกรณีหลายห้อง
+      discountedPrice: "-",
       totalPrice: total,
+      extraDetails,
     };
   };
 
   const { totalPrice } = calculatePrices();
+  const { extraDetails } = calculatePrices();
   const handleCloseModal = () => {
     setShowLoginModal(false);
   };
@@ -147,32 +192,32 @@ const BookingPage = () => {
     console.log("ยืนยันการจอง:", bookingData);
 
     try {
+  const payment = await BookingService.MakeBooking(
+    userId,
+    accommodation.map((room) => room.id),
+    checkIn,
+    checkOut,
+    adults,
+    children,
+    specialRequest,
+    totalPrice
+  );
 
-      bookingData ? await BookingService.MakeBooking(
-        userId,
-        accommodation.map((room) => room.id),
-        checkIn,
-        checkOut,
-        adults,
-        children,
-        specialRequest,
-        totalPrice
-      )
-        : setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
-      setLoading(false);
+  setPaymentData(payment.data);
+  setLoading(false);
 
-      console.log("ยืนยันการจอง:", bookingData);
-      localStorage.removeItem("selectedAccommodation");
-      navigate("/booking-confirmation", { state: bookingData });
+  console.log("ยืนยันการจอง:", payment.data);
 
+  localStorage.removeItem("selectedAccommodation");
+  navigate("/booking-confirmation", { state: payment.data });
 
-    } catch (err) {
-      console.error("การจองล้มเหลว:", err);
-      setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+} catch (err) {
+  console.error("การจองล้มเหลว:", err);
+  setError("เกิดข้อผิดพลาดในการจอง กรุณาลองอีกครั้ง");
+} finally {
+  setIsSubmitting(false);
+}
+  }
 
   if (!state || !state.accommodation || !Array.isArray(state.accommodation)) {
     return (
@@ -381,57 +426,69 @@ const BookingPage = () => {
 
           <Row className="mt-4 gx-4">
             <Col lg={8}>
-              {accommodation.map((room) => (
-                <Card key={room.id} className="mb-3">
-                  <Card.Img
-                    variant="top"
-                    src={room.image_name
-                      ? `${BASE_URL}/uploads/accommodations/${room.image_name}`
-                      : "https://via.placeholder.com/600x400?text=No+Image"}
-                  />
-                  <Card.Body>
-                    <Card.Title>{room.type?.name}</Card.Title>
-                    <ul className={`feature-list ${expandedFacilities[room.id] ? "expanded" : "collapsed"}`}>
-                      {room.facilities.slice(0, expandedFacilities[room.id] ? room.facilities.length : 5).map((facility, index) => (
-                        <li key={`acc-${room.id}-fac-${index}`}>
-                          <Icon icon={facility.icon_name} width="24" height="24" />
-                          {facility.name}
-                        </li>
-                      ))}
-                      {room.facilities.length > 5 && (
-                        <li
-                          onClick={() => {
-                            setExpandedFacilities((prev) => ({
-                              ...prev,
-                              [room.id]: !prev[room.id],
-                            }));
-                          }}
-                          style={{ cursor: "pointer" }}
-                          className="dropdown-toggle-icon"
-                        >
-                          <Icon
-                            icon={expandedFacilities[room.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
-                            width="24"
-                            height="24"
-                          />
-                        </li>
-                      )}
-                    </ul>
-                    <Card.Text>
-                      ราคาต่อคืน: {parseInt(room.price_per_night).toLocaleString()} บาท
-                      {room.promotions[0]?.discount > 0 && (
-                        <>
-                          <br />
-                          ส่วนลด: {parseInt(room.promotions[0]?.discount)}% → ราคา:{" "}
-                          {Math.round(room.price_per_night * (1 - room.promotions[0]?.discount / 100)).toLocaleString()} บาท
-                        </>
+              {accommodation.map((room) => {
+                const detail = extraDetails.find(d => d.roomId === room.id);
 
-                      )}
-                    </Card.Text>
+                return (
+                  <Card key={room.id} className="mb-3">
+                    <Card.Img
+                      variant="top"
+                      src={room.image_name
+                        ? `${BASE_URL}/uploads/accommodations/${room.image_name}`
+                        : "https://via.placeholder.com/600x400?text=No+Image"}
+                    />
+                    <Card.Body>
+                      <Card.Title>{room.type?.name}</Card.Title>
+                      {/* แสดงรายละเอียด extraDetail ถ้ามี */}
+                      {/* {detail && (
+                        <div style={{ marginBottom: "10px", fontSize: "0.9rem", color: "#555" }}>
+                          <p>จำนวนผู้ใหญ่เสริม: {detail.extraAdults} คน (ค่าใช้จ่าย {detail.extraAdultCost.toLocaleString()} บาท)</p>
+                          <p>จำนวนเด็กเสริม: {detail.extraChildren} คน (ค่าใช้จ่าย {detail.extraChildrenCost.toLocaleString()} บาท)</p>
+                          <p>ราคาหลังหักส่วนลดสำหรับ {detail.nights} คืน: {detail.discountedBasePrice.toLocaleString()} บาท</p>
+                          <p><strong>ราคารวม: {detail.totalPriceForRoom.toLocaleString()} บาท</strong></p>
+                        </div>
+                      )} */}
 
-                  </Card.Body>
-                </Card>
-              ))}
+                      <ul className={`feature-list ${expandedFacilities[room.id] ? "expanded" : "collapsed"}`}>
+                        {room.facilities.slice(0, expandedFacilities[room.id] ? room.facilities.length : 5).map((facility, index) => (
+                          <li key={`acc-${room.id}-fac-${index}`}>
+                            <Icon icon={facility.icon_name} width="24" height="24" />
+                            {facility.name}
+                          </li>
+                        ))}
+                        {room.facilities.length > 5 && (
+                          <li
+                            onClick={() => {
+                              setExpandedFacilities((prev) => ({
+                                ...prev,
+                                [room.id]: !prev[room.id],
+                              }));
+                            }}
+                            style={{ cursor: "pointer" }}
+                            className="dropdown-toggle-icon"
+                          >
+                            <Icon
+                              icon={expandedFacilities[room.id] ? "mdi:chevron-up" : "mdi:chevron-down"}
+                              width="24"
+                              height="24"
+                            />
+                          </li>
+                        )}
+                      </ul>
+                      <Card.Text>
+                        ราคาต่อคืน: {parseInt(room.price_per_night).toLocaleString()} บาท
+                        {room.promotions[0]?.discount > 0 && (
+                          <>
+                            <br />
+                            ส่วนลด: {parseInt(room.promotions[0]?.discount)}% → ราคา:{" "}
+                            {Math.round(room.price_per_night * (1 - room.promotions[0]?.discount / 100)).toLocaleString()} บาท
+                          </>
+                        )}
+                      </Card.Text>
+                    </Card.Body>
+                  </Card>
+                );
+              })}
 
               <Card className="special-request-card">
                 <Card.Body>
