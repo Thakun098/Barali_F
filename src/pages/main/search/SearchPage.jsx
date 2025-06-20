@@ -479,8 +479,11 @@ const SearchPage = () => {
                                   <div
                                     key={acc.id}
                                     className="price-option-card mb-3 mt-3 p-3 border-bottom bg-white"
-                                  >
+                                  ><div className="  text-success">
+                                      {acc.promotions?.[0]?.name ? acc.promotions?.[0]?.name: ""} 
+                                      </div>
                                     <div className="d-flex justify-content-between align-items-start">
+                                      
                                       <div>
                                         {acc.promotions?.[0]?.discount > 0}
                                         <DiscountedPrice accommodation={acc} />
