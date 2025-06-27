@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+// import { useNavigate, useLocation } from "react-router-dom";
 import AuthService from "../../../services/auth/auth.service";
 
 const LoginPage = ({onLoginSuccess}) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  // const navigate = useNavigate();
+  // const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});

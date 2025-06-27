@@ -13,6 +13,7 @@ const BookingList = () => {
   const isLoggedIn = Boolean(userId);
   const navigate = useNavigate();
 
+
   useEffect(() => {
     const storedAccommodation = localStorage.getItem("selectedAccommodation");
     const bookingInfo = localStorage.getItem("bookingInfo");
@@ -101,13 +102,14 @@ const BookingList = () => {
               variant="outline-secondary"
               size="sm" 
               onClick={() => {
-                const queryParams = new URLSearchParams({
-                  checkIn,
-                  checkOut,
-                  adults,
-                  children,
-                }).toString();
-                navigate(`/search-results?${queryParams}`);
+                // const queryParams = new URLSearchParams({
+                //   checkIn,
+                //   checkOut,
+                //   adults,
+                //   children,
+                // }).toString();
+                // navigate(`/search-results?${queryParams}`);
+                setTimeout(window.location.reload(), 1000)
               }}
             >
               เลือกห้องพักเพิ่ม
@@ -148,13 +150,14 @@ const BookingList = () => {
             size="sm"
             className="mt-1 me-2 mb-5"
             onClick={() => {
-              const queryParams = new URLSearchParams({
-                checkIn,
-                checkOut,
-                adults,
-                children,
-              }).toString();
-              navigate(`/search-results?${queryParams}`);
+              // const queryParams = new URLSearchParams({
+              //   checkIn,
+              //   checkOut,
+              //   adults,
+              //   children,
+              // }).toString();
+              // navigate(`/search-results?${queryParams}`);
+              setTimeout(window.location.reload(), 1000)
             }}
           >
             เลือกห้องพักเพิ่ม
